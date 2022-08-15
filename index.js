@@ -1,5 +1,6 @@
 const gulp = require('gulp'),
 	args = require('get-gulp-args')(),
+	mergeStream = require('merge-stream'),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
@@ -12,7 +13,8 @@ var domain = undefined;
 const allFiles = getFiles(),
 	indexHtmlFile = 'index.html',
 	stylesFolder = 'styles/',
-	cssFilename = stylesFolder+'index',
+	cssFilename = 'index',
+	cssFullFilename = cssFilename+'.css',
 	jsTemplatesFile = 'scripts/templates.js';
 
 const paths = {
@@ -21,9 +23,10 @@ const paths = {
 	dist: 'dist/'
 };
 paths.srcIndexHtml = paths.src+indexHtmlFile;
+paths.srcSass = paths.src+getFiles('scss');
 paths.srcLess = paths.src+getFiles('less');
 paths.srcJs = paths.src+getFiles('js');
-paths.srcOthers = [paths.src+allFiles, '!'+paths.srcIndexHtml, '!'+paths.srcLess, '!'+paths.srcJs];
+paths.srcOthers = [paths.src+allFiles, '!'+paths.srcIndexHtml, '!'+paths.srcSass, '!'+paths.srcLess, '!'+paths.srcJs];
 
 const nl = '\n',
 	tab = '	';
@@ -43,13 +46,23 @@ gulp.task('check', () => {
 });
 
 gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
+gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+stylesFolder+cssFullFilename+'">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp+getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulpSync.sync([
 	'index-build',
 	'index-domain'
 ]));
-gulp.task('styles', () => gulp.src(paths.src+cssFilename+'.less').pipe(injStr.prepend('// bower:less'+nl+'// endbower'+nl)).pipe($.wiredep()).pipe($.less()).on('error', notifyError).pipe(gulp.dest(paths.tmp+stylesFolder)));
+gulp.task('styles', () => {
+	const cssFilePathWithoutExt = paths.src+stylesFolder+cssFilename;
+	return mergeStream(getCssStream('scss', $.sass), getCssStream('less', $.less))
+		.pipe($.concat(cssFullFilename))
+		.pipe(gulp.dest(paths.tmp+stylesFolder));
+
+	function getCssStream(ext, process) {
+		return gulp.src(cssFilePathWithoutExt+'.'+ext).pipe(injStr.prepend('// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+	}
+});
+
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf','woff','woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
 gulp.task('others', () => {
 	const pugFilter = filter('pug');
@@ -66,7 +79,7 @@ gulp.task('build:tmp', gulpSync.sync([
 gulp.task('browser', ['build:tmp'], () => browserSyncInit(paths.tmp));
 gulp.task('serve', ['browser'], () => {
 	gulp.watch([paths.srcIndexHtml, paths.srcJs], ['index']);
-	gulp.watch(paths.srcLess, ['styles']);
+	gulp.watch([paths.srcSass, paths.srcLess], ['styles']);
 	gulp.watch(paths.srcOthers, ['others']);
 	gulp.watch(paths.tmp+allFiles, function(event) {
 		browserSync.reload(event.path);

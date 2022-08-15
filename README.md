@@ -20,7 +20,8 @@ Here is the essential basic organization you must to put in your project:
 ├─ src/
 │  ├─ fonts/
 │  ├─ styles/
-│  │  └─ index.less
+│  │  ├─ index.less
+│  │  └─ index.scss
 │  └─ index.html
 ├─ .gitignore
 ├─ bower.json
