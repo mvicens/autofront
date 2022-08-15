@@ -32,7 +32,7 @@ const nl = '\n',
 	tab = '	';
 
 gulp.task('check', () => {
-	const pckg = require('./package.json'),
+	const pckg = require('../../package.json'),
 		domainAliases = pckg.domainAliases;
 	var domainIndex = args[0]||'local';
 	if (domainAliases) {
