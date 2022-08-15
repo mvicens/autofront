@@ -2,13 +2,17 @@
 
 Gulp settings for projects.
 
+### Requirements
+
+It is compatible with version [8.17.0](https://nodejs.org/dist/v8.17.0/) of [Node.js](https://nodejs.org).
+
 ## Tasks
 
-- `gulp` or `gulp serve` are for running a test (development) server with live reload.
-- With `gulp serve:dist`, the server is production, but without the reload.
-- `gulp build` builds the distributable version.
+- `gulp` or `gulp serve` are for running a test server and develop with live reload.
+- `gulp build` only builds the distributable version.
+- With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs this version but without reload.
 
-Additionally, a parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the connection server. Defaults to local. And these domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`).
+Additionally, a parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the domain of connection path. Defaults to local. And these domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`).
 
 ## Folder structure
 
