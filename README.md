@@ -35,7 +35,7 @@ The main supported packages/languages/libraries are:
 `gulpfile.js` simply would look like:
 
 ```js
-require('proa-gulp');
+require('autofront');
 ```
 
 ### Folder structure
@@ -63,7 +63,7 @@ Running Gulp command, an additional parameter can be included (e.g.: `gulp --dev
 
 These domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`, to assign domain name for each alias).
 
-And, to capture the selected URL, put `{{PROA_DOMAIN}}` where it would be located in your source code.
+And, to capture the selected URL, put `{{AUTOFRONT_DOMAIN}}` where it would be located in your source code.
 
 ## Pending
 
