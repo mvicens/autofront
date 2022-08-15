@@ -84,7 +84,7 @@ gulp.task('serve', gulp.series('browser', () => {
 
 gulp.task('del:dist', () => delFolder(paths.dist));
 gulp.task('copy', gulp.series('del:dist', () => gulp.src(paths.tmp+allFiles).pipe(gulp.dest(paths.dist))));
-gulp.task('templates-build', () => gulp.src([paths.dist+getFiles('html'), '!'+paths.dist+indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, {module: 'app'})).pipe(gulp.dest(paths.dist)));
+gulp.task('templates-build', () => gulp.src([paths.dist+getFiles('html'), '!'+paths.dist+indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, {module: 'app', transformUrl: function(url) {return url.slice(1);}})).pipe(gulp.dest(paths.dist)));
 gulp.task('templates-clean', () => require('delete-empty')(paths.dist));
 gulp.task('templates', gulp.series('templates-build', 'templates-clean'));
 gulp.task('build', gulp.series('build:tmp', 'copy', 'templates', () => {
