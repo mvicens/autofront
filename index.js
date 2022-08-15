@@ -6,7 +6,7 @@ const gulp = require('gulp'),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
-	gulpSync = $.sync(gulp),
+	gulpSass = $.sass(require('sass')),
 	notifyError = $.notify.onError(error => error.message),
 	browserSync = require('browser-sync').create();
 
@@ -50,12 +50,9 @@ gulp.task('check', () => {
 gulp.task('del', () => delFolder(paths.tmp));
 gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+stylesFolder+cssFullFilename+'">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp+getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
-gulp.task('index', gulpSync.sync([
-	'index-build',
-	'index-domain'
-]));
+gulp.task('index', gulp.series('index-build', 'index-domain'));
 gulp.task('styles', () => {
-	return mergeStream(getCssStream('scss', $.sass, '@import "variables";'), getCssStream('less', $.less))
+	return mergeStream(getCssStream('scss', gulpSass, '@import "variables";'), getCssStream('less', $.less))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp+stylesFolder));
 
@@ -71,34 +68,26 @@ gulp.task('others', () => {
 		.pipe(gulp.dest(paths.tmp));
 });
 gulp.task('about', () => gulp.src('package.json').pipe($.about()).pipe(gulp.dest(paths.tmp)));
-gulp.task('build:tmp', gulpSync.sync([
-	'del',
-	'check',
-	['index', 'styles', 'fonts', 'others', 'about']
-]));
-gulp.task('browser', ['build:tmp'], () => browserSyncInit(paths.tmp));
-gulp.task('serve', ['browser'], () => {
-	gulp.watch([paths.srcIndexHtml, paths.srcJs], ['index']);
-	gulp.watch([paths.srcSass, paths.srcLess], ['styles']);
-	gulp.watch(paths.srcOthers, ['others']);
+gulp.task('build:tmp', gulp.series('del', 'check', gulp.parallel('index', 'styles', 'fonts', 'others', 'about')));
+gulp.task('browser', gulp.series('build:tmp', (cb) => {
+	browserSyncInit(paths.tmp);
+	cb();
+}));
+exports.serve = gulp.series('browser', () => {
+	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
+	gulp.watch([paths.srcSass, paths.srcLess], gulp.task('styles'));
+	gulp.watch(paths.srcOthers, gulp.task('others'));
 	gulp.watch(paths.tmp+allFiles, function(event) {
 		browserSync.reload(event.path);
 	});
 });
 
 gulp.task('del:dist', () => delFolder(paths.dist));
-gulp.task('copy', ['del:dist'], () => gulp.src(paths.tmp+allFiles).pipe(gulp.dest(paths.dist)));
+gulp.task('copy', gulp.series('del:dist', () => gulp.src(paths.tmp+allFiles).pipe(gulp.dest(paths.dist))));
 gulp.task('templates-build', () => gulp.src([paths.dist+getFiles('html'), '!'+paths.dist+indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, {module: 'app'})).pipe(gulp.dest(paths.dist)));
 gulp.task('templates-clean', () => require('delete-empty')(paths.dist));
-gulp.task('templates', gulpSync.sync([
-	'templates-build',
-	'templates-clean'
-]));
-gulp.task('build', gulpSync.sync([
-	'build:tmp',
-	'copy',
-	'templates'
-]), () => {
+gulp.task('templates', gulp.series('templates-build', 'templates-clean'));
+exports.build = gulp.series('build:tmp', 'copy', 'templates', () => {
 	const indexHtmlFilter = filter('html'),
 		cssFilter = filter('css'),
 		jsFilter = filter('js'),
@@ -116,9 +105,9 @@ gulp.task('build', gulpSync.sync([
 		.pipe($.size({showFiles: true}))
 		.pipe(gulp.dest(paths.dist));
 });
-gulp.task('serve:dist', ['build'], () => browserSyncInit(paths.dist));
+exports['serve:dist'] = gulp.series(exports.build, () => browserSyncInit(paths.dist));
 
-gulp.task('default', ['serve']);
+exports.default = exports.serve;
 
 function html5Mode() {
 	const pathPrefix = '/';
