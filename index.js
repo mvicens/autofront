@@ -30,10 +30,10 @@ const nl = '\n',
 
 gulp.task('check', () => {
 	const pckg = require('./package.json'),
-		domainAlias = pckg.domainAlias;
+		domainAliases = pckg.domainAliases;
 	var domainIndex = args[0]||'local';
-	if (domainAlias) {
-		const alias = domainAlias[domainIndex];
+	if (domainAliases) {
+		const alias = domainAliases[domainIndex];
 		if (alias)
 			domainIndex = alias;
 	}
