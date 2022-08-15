@@ -53,13 +53,12 @@ gulp.task('index', gulpSync.sync([
 	'index-domain'
 ]));
 gulp.task('styles', () => {
-	const cssFilePathWithoutExt = paths.src+stylesFolder+cssFilename;
 	return mergeStream(getCssStream('scss', $.sass), getCssStream('less', $.less))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp+stylesFolder));
 
 	function getCssStream(ext, process) {
-		return gulp.src(cssFilePathWithoutExt+'.'+ext).pipe(injStr.prepend('// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext).pipe(injStr.prepend('// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
 	}
 });
 
