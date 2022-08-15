@@ -38,6 +38,13 @@ The main supported packages/languages/libraries are:
 require('autofront');
 ```
 
+Optionally, to work with [HTML5 mode](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode), invoke `html5Mode` to prefix path of assets.
+
+```js
+var autofront = require('autofront');
+autofront.html5Mode();
+```
+
 ### Folder structure
 
 Here is the essential basic organization you must to put in your project:

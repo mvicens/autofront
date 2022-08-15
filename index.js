@@ -1,3 +1,5 @@
+this.html5Mode = html5Mode;
+
 const gulp = require('gulp'),
 	args = require('get-gulp-args')(),
 	mergeStream = require('merge-stream'),
@@ -12,9 +14,9 @@ var domain = undefined;
 
 const allFiles = getFiles(),
 	indexHtmlFile = 'index.html',
-	stylesFolder = 'styles/',
 	cssFilename = 'index',
-	cssFullFilename = cssFilename+'.css',
+	cssFullFilename = cssFilename+'.css';
+var stylesFolder = 'styles/',
 	jsTemplatesFile = 'scripts/templates.js';
 
 const paths = {
@@ -117,6 +119,12 @@ gulp.task('build', gulpSync.sync([
 gulp.task('serve:dist', ['build'], () => browserSyncInit(paths.dist));
 
 gulp.task('default', ['serve']);
+
+function html5Mode() {
+	const pathPrefix = '/';
+	stylesFolder = pathPrefix + stylesFolder;
+	jsTemplatesFile = pathPrefix + jsTemplatesFile;
+}
 
 function getFiles(ext) {
 	ext = ext || '*';
