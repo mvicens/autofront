@@ -6,7 +6,7 @@
 
 ### Tasks
 
-The Gulp ones are the following:
+Mainly the Gulp ones are the following:
 
 - `gulp` or `gulp serve` are for running a test server and develop with live reload.
 - `gulp build` only builds the distributable version.

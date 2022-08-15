@@ -1,6 +1,6 @@
 {
   "name": "autofront",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Gulp settings for front-end projects.",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "dependencies": {
     "browser-sync": "^2.26.3",
     "delete-empty": "^2.0.0",
-    "get-gulp-args": "0.0.1",
+    "get-gulp-args": "^0.0.1",
     "gulp": "^4.0.2",
     "gulp-about": "^1.1.0",
     "gulp-angular-filesort": "^1.2.1",

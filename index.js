@@ -131,7 +131,7 @@ function filter(ext, isUnrestored) {
 }
 
 function browserSyncInit(path) {
-	return browserSync.init({
+	browserSync.init({
 		server: {
 			baseDir: path
 		}
