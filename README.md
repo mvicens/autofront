@@ -2,29 +2,31 @@
 
 [Gulp](https://gulpjs.com) settings for front-end projects.
 
-## Behaviour
+## Get started
 
-### Tasks
+### Install
 
-Mainly the Gulp ones are the following:
+```sh
+npm install --save-dev autofront
+```
 
-* `gulp` or `gulp serve` are for running a test server and develop with live reload.
-* `gulp build` only builds the distributable version.
-* With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs this version but without reload.
+### Folder structure
 
-### Support
+Here is the essential basic organization you must to put in your project:
 
-The main supported packages/languages/libraries are:
+```text
+├─ src/
+│  ├─ styles/
+│  │  ├─ _variables.scss
+│  │  ├─ index.less
+│  │  └─ index.scss
+│  └─ index.html
+├─ bower.json
+├─ gulpfile.js
+└─ package.json
+```
 
-* [Bower](https://bower.io).
-* Preprocessors:
-  * HTML: [Pug](https://pugjs.org).
-  * CSS:
-    * [Less](https://lesscss.org).
-    * [Sass](https://sass-lang.com).
-* [AngularJS](https://angularjs.org).
-
-## Usage
+In `src`, only `index.html` is required. However, if Sass is used, both files must to exist.
 
 ### Gulp file
 
@@ -40,25 +42,6 @@ Optionally, to work with [HTML5 mode](https://docs.angularjs.org/api/ng/provider
 var autofront = require('autofront');
 autofront.html5Mode();
 ```
-
-### Folder structure
-
-Here is the essential basic organization you must to put in your project:
-
-```text
-├─ src/
-│  ├─ fonts/
-│  ├─ styles/
-│  │  ├─ _variables.scss
-│  │  ├─ index.less
-│  │  └─ index.scss
-│  └─ index.html
-├─ bower.json
-├─ gulpfile.js
-└─ package.json
-```
-
-In `src`, only `index.html` is required. However, if Sass is used, both files must to exist.
 
 ### Dependencies
 
@@ -90,13 +73,41 @@ One of these should to be named "app", ideally the main one.
 
 ### Domains
 
-Running Gulp command, an additional parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the domain of connection path. Defaults to local.
+At least it should be defined the local one. See [the proper section](#domains-1).
+
+## Usage
+
+### Tasks
+
+Mainly the Gulp ones are the following:
+
+* `gulp` or `gulp serve` are for running a test server and develop with live reload.
+* `gulp build` only builds the distributable version.
+* With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs this version but without reload.
+
+### Domains
+
+Running Gulp command, an additional parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the domain of connection path. Defaults to `"local"`.
 
 These domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`, to assign domain name for each alias).
 
 And, to capture the selected URL, put `{{AUTOFRONT_DOMAIN}}` where it would be located in your source code.
 
+## Support
+
+The main supported packages/languages/libraries are:
+
+* [Bower](https://bower.io).
+* Preprocessors:
+  * HTML: [Pug](https://pugjs.org).
+  * CSS:
+    * [Less](https://lesscss.org).
+    * [Sass](https://sass-lang.com).
+* [AngularJS](https://angularjs.org).
+
 ## Pending
+
+Improves to do:
 
 * Once the server waits for changes, synchronize also the deletion of files (from `src`).
 * Sass errors must not break the Gulp process (like Less).
