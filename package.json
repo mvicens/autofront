@@ -1,6 +1,6 @@
 {
   "name": "autofront",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Gulp settings for front-end projects.",
   "main": "index.js",
   "scripts": {
