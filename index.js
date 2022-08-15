@@ -53,12 +53,12 @@ gulp.task('index', gulpSync.sync([
 	'index-domain'
 ]));
 gulp.task('styles', () => {
-	return mergeStream(getCssStream('scss', $.sass), getCssStream('less', $.less))
+	return mergeStream(getCssStream('scss', $.sass, '@import "variables";'), getCssStream('less', $.less))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp+stylesFolder));
 
-	function getCssStream(ext, process) {
-		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext).pipe(injStr.prepend('// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+	function getCssStream(ext, process, extraCode) {
+		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext).pipe(injStr.prepend((extraCode?extraCode+nl:'')+'// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
 	}
 });
 

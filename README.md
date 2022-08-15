@@ -20,6 +20,7 @@ Here is the essential basic organization you must to put in your project:
 ├─ src/
 │  ├─ fonts/
 │  ├─ styles/
+│  │  ├─ _variables.scss
 │  │  ├─ index.less
 │  │  └─ index.scss
 │  └─ index.html
