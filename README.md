@@ -74,6 +74,6 @@ And, to capture the selected URL, put `{{AUTOFRONT_DOMAIN}}` where it would be l
 
 ## Pending
 
-- [ ] Once the server waits for changes, synchronize also the deletion of files (from `src`).
-- [ ] Sass errors must not break the Gulp process (like Less).
-- [ ] Bower should be replaced as a dependency manager. It is currently [under maintenance](https://bower.io/blog/2017/how-to-migrate-away-from-bower/) and, therefore, its use is not recommended.
+- Once the server waits for changes, synchronize also the deletion of files (from `src`).
+- Sass errors must not break the Gulp process (like Less).
+- Bower should be replaced as a dependency manager. It is currently [under maintenance](https://bower.io/blog/2017/how-to-migrate-away-from-bower/) and, therefore, its use is not recommended.
