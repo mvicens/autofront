@@ -4,8 +4,7 @@ const gulp = require('gulp'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
 	gulpSync = $.sync(gulp),
-	browserSync = require('browser-sync').create(),
-	deleteEmpty = require('delete-empty');
+	browserSync = require('browser-sync').create();
 
 var domain = undefined;
 
@@ -70,8 +69,8 @@ gulp.task('serve', ['browser'], () => {
 
 gulp.task('del:dist', () => delFolder(paths.dist));
 gulp.task('copy', ['del:dist'], () => gulp.src(paths.tmp+allFiles).pipe(gulp.dest(paths.dist)));
-gulp.task('templates-build', () => gulp.src([paths.dist+getFiles('html'), '!'+paths.dist+indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe($.htmlmin({collapseWhitespace: true, conservativeCollapse: true})).pipe($.angularTemplatecache(jsTemplatesFile, {module: 'app'})).pipe(gulp.dest(paths.dist)));
-gulp.task('templates-clean', () => deleteEmpty(paths.dist));
+gulp.task('templates-build', () => gulp.src([paths.dist+getFiles('html'), '!'+paths.dist+indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, {module: 'app'})).pipe(gulp.dest(paths.dist)));
+gulp.task('templates-clean', () => require('delete-empty')(paths.dist));
 gulp.task('templates', gulpSync.sync([
 	'templates-build',
 	'templates-clean'
@@ -88,7 +87,7 @@ gulp.task('build', gulpSync.sync([
 		imgFilter = filter(['png','jpg','gif','svg']),
 		jsonFilter = filter('json');
 	return gulp.src(paths.dist+allFiles)
-		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', '<script src="'+jsTemplatesFile+'"></script>'+nl)).pipe($.htmlmin({collapseWhitespace: true})).pipe(indexHtmlFilter.restore)
+		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', '<script src="'+jsTemplatesFile+'"></script>'+nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
 		.pipe(cssFilter).pipe($.cssnano({zindex: false})).pipe(cssFilter.restore)
 		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.uglify()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
@@ -123,4 +122,8 @@ function browserSyncInit(path) {
 			baseDir: path
 		}
 	});
+}
+
+function minifyHtml() {
+	return $.htmlmin({collapseWhitespace: true, conservativeCollapse: true});
 }
