@@ -43,7 +43,7 @@ gulp.task('check', () => {
 });
 
 gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
+gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp+getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulpSync.sync([
 	'index-build',
