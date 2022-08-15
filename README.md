@@ -8,21 +8,21 @@
 
 Mainly the Gulp ones are the following:
 
-- `gulp` or `gulp serve` are for running a test server and develop with live reload.
-- `gulp build` only builds the distributable version.
-- With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs this version but without reload.
+* `gulp` or `gulp serve` are for running a test server and develop with live reload.
+* `gulp build` only builds the distributable version.
+* With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs this version but without reload.
 
 ### Support
 
 The main supported packages/languages/libraries are:
 
-- [Bower](https://bower.io).
-- Preprocessors:
-  - HTML: [Pug](https://pugjs.org).
-  - CSS:
-    - [Less](https://lesscss.org).
-    - [Sass](https://sass-lang.com).
-- [AngularJS](https://angularjs.org).
+* [Bower](https://bower.io).
+* Preprocessors:
+  * HTML: [Pug](https://pugjs.org).
+  * CSS:
+    * [Less](https://lesscss.org).
+    * [Sass](https://sass-lang.com).
+* [AngularJS](https://angularjs.org).
 
 ## Usage
 
@@ -60,6 +60,34 @@ Here is the essential basic organization you must to put in your project:
 
 In `src`, only `index.html` is required. However, if Sass is used, both files must to exist.
 
+### Dependencies
+
+These ones are automatically  built by [Gulp Useref](https://www.npmjs.com/package/gulp-useref), [Wiredep](https://www.npmjs.com/package/wiredep) and [Gulp Inject](https://www.npmjs.com/package/gulp-inject). Then, to reach this, `index.html` would have to look basically like:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- build:css styles/vendor.css -->
+	<!-- bower:css --><!-- endbower -->
+	<!-- endbuild -->
+</head>
+<body>
+<!-- build:js scripts/vendor.js -->
+<!-- bower:js --><!-- endbower -->
+<!-- endbuild -->
+<!-- build:js scripts/app.js -->
+<!-- inject:js -->
+<!-- endinject -->
+<!-- endbuild -->
+</body>
+</html>
+```
+
+### AngularJS modules
+
+One of these should to be named "app", ideally the main one.
+
 ### Domains
 
 Running Gulp command, an additional parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the domain of connection path. Defaults to local.
@@ -70,6 +98,6 @@ And, to capture the selected URL, put `{{AUTOFRONT_DOMAIN}}` where it would be l
 
 ## Pending
 
-- Once the server waits for changes, synchronize also the deletion of files (from `src`).
-- Sass errors must not break the Gulp process (like Less).
-- Bower should be replaced as a dependency manager. It is currently [under maintenance](https://bower.io/blog/2017/how-to-migrate-away-from-bower/) and, therefore, its use is not recommended.
+* Once the server waits for changes, synchronize also the deletion of files (from `src`).
+* Sass errors must not break the Gulp process (like Less).
+* Bower should be replaced as a dependency manager. It is currently [under maintenance](https://bower.io/blog/2017/how-to-migrate-away-from-bower/) and, therefore, its use is not recommended.
