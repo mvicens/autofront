@@ -43,20 +43,7 @@ gulp.task('check', () => {
 });
 
 gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index-build', () => {
-	const srcLibJs = paths.src+'lib/'+getFiles('js');
-	return gulp.src(paths.srcIndexHtml)
-		.pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">'))
-		.pipe(injectJs(srcLibJs, 'vendor'))
-		.pipe(injectJs([paths.srcJs, '!'+srcLibJs], 'app'))
-		.pipe($.wiredep())
-		.pipe($.useref())
-		.pipe(gulp.dest(paths.tmp));
-
-	function injectJs(globs, subname) {
-		return $.inject(gulp.src(globs).pipe($.angularFilesort()), {name: 'inject-'+subname, relative: true});
-	}
-});
+gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), {relative: true})).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp+getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulpSync.sync([
 	'index-build',
