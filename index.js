@@ -54,7 +54,8 @@ gulp.task('index', gulp.series('index-build', 'index-domain'));
 gulp.task('styles', () => {
 	return mergeStream(getCssStream('scss', gulpSass, '@import "variables";'), getCssStream('less', $.less))
 		.pipe($.concat(cssFullFilename))
-		.pipe(gulp.dest(paths.tmp+stylesFolder));
+		.pipe(gulp.dest(paths.tmp+stylesFolder))
+		.pipe(browserSync.stream());
 
 	function getCssStream(ext, process, extraCode) {
 		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext, {allowEmpty: true}).pipe(injStr.prepend((extraCode?extraCode+nl:'')+'// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
@@ -77,8 +78,9 @@ gulp.task('serve', gulp.series('browser', () => {
 	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
 	gulp.watch([paths.srcSass, paths.srcLess], gulp.task('styles'));
 	gulp.watch(paths.srcOthers, gulp.task('others'));
-	gulp.watch(paths.tmp+allFiles, function(event) {
-		browserSync.reload(event.path);
+	gulp.watch([paths.tmp+allFiles, '!'+paths.tmp+stylesFolder+cssFullFilename], function(cb) {
+		browserSync.reload();
+		cb();
 	});
 }));
 
