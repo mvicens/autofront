@@ -8,7 +8,7 @@ Gulp settings for projects.
 - With `gulp serve:dist`, the server is production, but without the reload.
 - `gulp build` builds the distributable version.
 
-Additionally, a parameter can be included (e.g.: `gulp serve --dev` o `gulp build --pro`) to indicate the connection server. Defaults to local. And these domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`).
+Additionally, a parameter can be included (e.g.: `gulp --dev` o `gulp build --pro`) to indicate the connection server. Defaults to local. And these domain URLs must to appear listed in `package.json` with the property `domains` (optionally also `domainsAliases`).
 
 ## Folder structure
 

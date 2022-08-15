@@ -95,7 +95,7 @@ gulp.task('build', gulpSync.sync([
 	return gulp.src(paths.dist+allFiles)
 		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', '<script src="'+jsTemplatesFile+'"></script>'+nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
 		.pipe(cssFilter).pipe($.cssnano({zindex: false})).pipe(cssFilter.restore)
-		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.uglify()).pipe(jsFilter.restore)
+		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.terser()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
 		.pipe($.revReplace())
 		.pipe(imgFilter).pipe($.imagemin()).pipe(imgFilter.restore)
