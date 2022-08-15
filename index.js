@@ -1,10 +1,13 @@
 const gulp = require('gulp'),
+	args = require('get-gulp-args')(),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
 	gulpSync = $.sync(gulp),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty');
+
+var domain = undefined;
 
 const allFiles = getFiles(),
 	indexHtmlFile = 'index.html',
@@ -25,14 +28,34 @@ paths.srcOthers = [paths.src+allFiles, '!'+paths.srcIndexHtml, '!'+paths.srcLess
 const nl = '\n',
 	tab = '	';
 
+gulp.task('check', () => {
+	const pckg = require('./package.json'),
+		domainAlias = pckg.domainAlias;
+	var domainIndex = args[0]||'local';
+	if (domainAlias) {
+		const alias = domainAlias[domainIndex];
+		if (alias)
+			domainIndex = alias;
+	}
+	domain = pckg.domains[domainIndex];
+	return gulp.src(paths.src)
+		.pipe(domain?$.notify('Matching domain: "'+domainIndex+'".'):process.exit());
+});
+
 gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
+gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl+tab+'<link rel="stylesheet" href="'+cssFilename+'.css">')).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
+gulp.task('index-domain', () => gulp.src(paths.tmp+getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
+gulp.task('index', gulpSync.sync([
+	'index-build',
+	'index-domain'
+]));
 gulp.task('styles', () => gulp.src(paths.src+cssFilename+'.less').pipe(injStr.prepend('// bower:less'+nl+'// endbower'+nl)).pipe($.wiredep()).pipe($.less()).on('error', $.notify.onError(error => error.message)).pipe(gulp.dest(paths.tmp+stylesFolder)));
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf', 'woff', 'woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
 gulp.task('others', () => gulp.src(paths.srcOthers).pipe(gulp.dest(paths.tmp)));
 gulp.task('about', () => gulp.src('package.json').pipe($.about()).pipe(gulp.dest(paths.tmp)));
 gulp.task('build:tmp', gulpSync.sync([
 	'del',
+	'check',
 	['index', 'styles', 'fonts', 'others', 'about']
 ]));
 gulp.task('browser', ['build:tmp'], () => browserSyncInit(paths.tmp));
