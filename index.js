@@ -4,6 +4,7 @@ const gulp = require('gulp'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
 	gulpSync = $.sync(gulp),
+	notifyError = $.notify.onError(error => error.message),
 	browserSync = require('browser-sync').create();
 
 var domain = undefined;
@@ -48,9 +49,14 @@ gulp.task('index', gulpSync.sync([
 	'index-build',
 	'index-domain'
 ]));
-gulp.task('styles', () => gulp.src(paths.src+cssFilename+'.less').pipe(injStr.prepend('// bower:less'+nl+'// endbower'+nl)).pipe($.wiredep()).pipe($.less()).on('error', $.notify.onError(error => error.message)).pipe(gulp.dest(paths.tmp+stylesFolder)));
+gulp.task('styles', () => gulp.src(paths.src+cssFilename+'.less').pipe(injStr.prepend('// bower:less'+nl+'// endbower'+nl)).pipe($.wiredep()).pipe($.less()).on('error', notifyError).pipe(gulp.dest(paths.tmp+stylesFolder)));
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf', 'woff', 'woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
-gulp.task('others', () => gulp.src(paths.srcOthers).pipe(gulp.dest(paths.tmp)));
+gulp.task('others', () => {
+	const pugFilter = filter('pug');
+	return gulp.src(paths.srcOthers)
+		.pipe(pugFilter).pipe($.pug()).on('error', notifyError).pipe(pugFilter.restore)
+		.pipe(gulp.dest(paths.tmp));
+});
 gulp.task('about', () => gulp.src('package.json').pipe($.about()).pipe(gulp.dest(paths.tmp)));
 gulp.task('build:tmp', gulpSync.sync([
 	'del',
