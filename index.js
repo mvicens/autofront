@@ -50,7 +50,7 @@ gulp.task('index', gulpSync.sync([
 	'index-domain'
 ]));
 gulp.task('styles', () => gulp.src(paths.src+cssFilename+'.less').pipe(injStr.prepend('// bower:less'+nl+'// endbower'+nl)).pipe($.wiredep()).pipe($.less()).on('error', notifyError).pipe(gulp.dest(paths.tmp+stylesFolder)));
-gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf', 'woff', 'woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
+gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf','woff','woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
 gulp.task('others', () => {
 	const pugFilter = filter('pug');
 	return gulp.src(paths.srcOthers)
