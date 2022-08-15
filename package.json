@@ -1,7 +1,7 @@
 {
   "name": "autofront",
-  "version": "1.5.4",
-  "description": "Gulp settings for projects.",
+  "version": "1.5.5",
+  "description": "Gulp settings for front-end projects.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

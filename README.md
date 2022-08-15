@@ -1,6 +1,6 @@
 # Autofront
 
-Gulp settings for projects.
+Gulp settings for front-end projects.
 
 ### Requirements
 
