@@ -57,7 +57,7 @@ gulp.task('styles', () => {
 		.pipe(gulp.dest(paths.tmp+stylesFolder));
 
 	function getCssStream(ext, process, extraCode) {
-		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext).pipe(injStr.prepend((extraCode?extraCode+nl:'')+'// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext, {allowEmpty: true}).pipe(injStr.prepend((extraCode?extraCode+nl:'')+'// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
 	}
 });
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf','woff','woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
@@ -122,7 +122,7 @@ function getFiles(ext) {
 }
 
 function delFolder(path) {
-	return gulp.src(path, {read: false})
+	return gulp.src(path, {allowEmpty: true, read: false})
 		.pipe($.clean());
 }
 
