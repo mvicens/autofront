@@ -61,7 +61,6 @@ gulp.task('styles', () => {
 		return gulp.src(paths.src+stylesFolder+cssFilename+'.'+ext).pipe(injStr.prepend((extraCode?extraCode+nl:'')+'// bower:'+ext+nl+'// endbower'+nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
 	}
 });
-
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot','otf','svg','ttf','woff','woff2'], true)).pipe(gulp.dest(paths.tmp+'fonts/')));
 gulp.task('others', () => {
 	const pugFilter = filter('pug');
