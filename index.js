@@ -35,16 +35,20 @@ const nl = '\n',
 
 gulp.task('check', () => {
 	const pckg = require('../../package.json'),
-		domainAliases = pckg.domainAliases;
+		domains = pckg.domains;
 	var domainIndex = args[0]||'local';
-	if (domainAliases) {
-		const alias = domainAliases[domainIndex];
-		if (alias)
-			domainIndex = alias;
+	if (domains) {
+		const domainAliases = pckg.domainAliases;
+		if (domainAliases) {
+			const alias = domainAliases[domainIndex];
+			if (alias)
+				domainIndex = alias;
+		}
+		domain = domains[domainIndex];
 	}
-	domain = pckg.domains[domainIndex];
+	const isMatched = domain!==undefined;
 	return gulp.src(paths.src)
-		.pipe(domain?$.notify('Matching domain: "'+domainIndex+'".'):process.exit());
+		.pipe($.notify(isMatched?'Matching domain: "'+domainIndex+'".':'No domain matched.'));
 });
 
 gulp.task('del', () => delFolder(paths.tmp));

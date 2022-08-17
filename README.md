@@ -71,10 +71,6 @@ These ones are automatically  built by [Gulp Useref](https://www.npmjs.com/packa
 
 One of these should to be named "app", ideally the main one.
 
-### Domains
-
-At least it should be defined the local one. See [the proper section](#domains-1).
-
 ## Usage
 
 ### Tasks
@@ -89,7 +85,7 @@ Mainly the Gulp ones are the following:
 
 Running Gulp command, an additional parameter can be included (e.g.: `gulp --dev` or `gulp build --pro`) to indicate the domain of connection path. Defaults to `--local`.
 
-These domain URLs must to appear in `package.json` listed in the property `domains` (optionally also `domainsAliases`, to assign domain name for each alias).
+These domain URLs would be searched in `package.json` listed in the property `domains` (optionally also `domainsAliases`, to assign domain name for each alias).
 
 And, to capture the selected URL, put `{{AUTOFRONT_DOMAIN}}` where it would be located in your source code.
 
