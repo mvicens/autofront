@@ -11,11 +11,12 @@
     "url": "git+https://github.com/mvicens/autofront.git"
   },
   "keywords": [
-    "gulp",
-    "bower",
+    "html",
     "pug",
+    "css",
     "less",
     "sass",
+    "javascript",
     "angularjs"
   ],
   "author": "Miquel Alejandro Vicens Dalmau",
