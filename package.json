@@ -1,7 +1,7 @@
 {
   "name": "autofront",
   "version": "2.1.0",
-  "description": "Gulp settings for front-end projects.",
+  "description": "Automatisation of front-end by Gulp and Bower.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
