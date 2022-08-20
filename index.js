@@ -1,6 +1,7 @@
 this.html5Mode = html5Mode;
 
 const gulp = require('gulp'),
+	path = require('path'),
 	args = require('get-gulp-args')(),
 	mergeStream = require('merge-stream'),
 	mainBowerFiles = require('main-bower-files'),
@@ -34,7 +35,7 @@ const nl = '\n',
 	tab = '	';
 
 gulp.task('check', () => {
-	const pckg = require('../../package.json'),
+	const pckg = require(path.resolve('package.json')),
 		domains = pckg.domains;
 	var domainIndex = args[0]||'local';
 	if (domains) {
