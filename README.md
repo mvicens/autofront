@@ -113,7 +113,7 @@ One of modules should to be named "app", ideally the main one.
 Optionally, to work with [HTML5 mode](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode), invoke it:
 
 ```js
-var autofront = require('autofront');
+let autofront = require('autofront');
 autofront.html5Mode();
 ```
 

@@ -11,13 +11,13 @@ const gulp = require('gulp'),
 	notifyError = $.notify.onError(error => error.message),
 	browserSync = require('browser-sync').create();
 
-var domain = undefined;
+let domain = undefined;
 
 const allFiles = getFiles(),
 	indexHtmlFile = 'index.html',
 	cssFilename = 'index',
 	cssFullFilename = cssFilename + '.css';
-var stylesFolder = 'styles/',
+let stylesFolder = 'styles/',
 	jsTemplatesFile = 'scripts/templates.js';
 
 const paths = {
@@ -37,7 +37,7 @@ const nl = '\n',
 gulp.task('check', () => {
 	const pckg = require(path.resolve('package.json')),
 		domains = pckg.domains;
-	var domainIndex = args[0] || 'local';
+	let domainIndex = args[0] || 'local';
 	if (domains) {
 		const domainAliases = pckg.domainAliases;
 		if (domainAliases) {
@@ -49,11 +49,11 @@ gulp.task('check', () => {
 	}
 	const isMatched = domain !== undefined;
 	return gulp.src(paths.src)
-		.pipe($.notify(isMatched ? 'Matching domain: "' + domainIndex + '".' : 'No domain matched.'));
+		.pipe($.notify(isMatched ? `Matching domain: "${domainIndex}".` : 'No domain matched.'));
 });
 
 gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl + tab + '<link rel="stylesheet" href="' + stylesFolder + cssFullFilename + '">')).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
+gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl + tab + `<link rel="stylesheet" href="${stylesFolder}${cssFullFilename}">`)).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp + getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulp.series('index-build', 'index-domain'));
 gulp.task('styles', () => {
@@ -102,7 +102,7 @@ gulp.task('build', gulp.series('build:tmp', 'copy', 'templates', () => {
 		imgFilter = filter(['png', 'jpg', 'gif', 'svg']),
 		jsonFilter = filter('json');
 	return gulp.src(paths.dist + allFiles)
-		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', '<script src="' + jsTemplatesFile + '"></script>' + nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
+		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', `<script src="${jsTemplatesFile}"></script>` + nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
 		.pipe(cssFilter).pipe($.cssnano({ zindex: false })).pipe(cssFilter.restore)
 		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.terser()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
@@ -122,8 +122,7 @@ function html5Mode() {
 	jsTemplatesFile = pathPrefix + jsTemplatesFile;
 }
 
-function getFiles(ext) {
-	ext = ext || '*';
+function getFiles(ext = '*') {
 	const isArray = typeof ext != 'string';
 	return '**/*.' + (isArray ? '{' : '') + (isArray ? ext.join() : ext) + (isArray ? '}' : '');
 }
