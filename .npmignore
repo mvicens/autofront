@@ -1,2 +1,6 @@
 gulpfile.js
+bower.json
+bower_components/
 src/
+.tmp/
+dist/
