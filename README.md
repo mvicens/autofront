@@ -125,7 +125,6 @@ Any asset (e.g. a PDF document) will keep the location path and, particularly at
 
 Fixes and improvements to do:
 
-* Avoid process-breaking Sass errors, like Less rightly does.
 * Once the server watch for changes:
   * Synchronize also the deletion of source files.
   * Resolve overwriting bug between pure CSS and preprocessors (Less/Sass).
