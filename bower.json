@@ -1,0 +1,50 @@
+{
+  "name": "autofront",
+  "description": "Automatisation of front-end by Gulp and Bower.",
+  "main": "index.js",
+  "authors": [
+    "Miquel Alejandro Vicens Dalmau"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "html",
+    "pug",
+    "css",
+    "less",
+    "sass",
+    "javascript",
+    "angularjs"
+  ],
+  "homepage": "https://github.com/mvicens/autofront",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.8.3",
+    "bootstrap": "^5.2.1",
+    "font-awesome": "^6.2.0"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": "scss/bootstrap.scss"
+    },
+    "font-awesome": {
+      "main": [
+        "webfonts/fa-solid-900.ttf",
+        "webfonts/fa-solid-900.woff2",
+        "webfonts/fa-regular-400.ttf",
+        "webfonts/fa-regular-400.woff2",
+        "webfonts/fa-brands-400.ttf",
+        "webfonts/fa-brands-400.woff2",
+        "scss/fontawesome.scss",
+        "scss/solid.scss",
+        "scss/regular.scss",
+        "scss/brands.scss"
+      ]
+    }
+  }
+}

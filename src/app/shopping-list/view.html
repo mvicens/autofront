@@ -1,0 +1,31 @@
+<div class="row">
+	<div class="col-4"><img src="assets/img/basket.jpg" alt="Basket" class="img-fluid"></div>
+	<div class="col-8">
+		<header>
+			<h2 class="display-3 mb-3">Shopping list</h2>
+		</header>
+		<ul class="list-group" ng-show="vm.list.length">
+			<li class="list-group-item list-group-item-action" ng-repeat="item in vm.list track by $index">
+				<form ng-submit="vm.acceptEdition($index)" class="d-flex justify-content-between align-items-center">
+					<span ng-hide="item.isEditing">{{item.name}}</span>
+					<input type="text" class="form-control" ng-model="item.name" ng-show="item.isEditing">
+					<div class="btn-group">
+						<button type="button" class="btn btn-link" ng-click="vm.edit($index)"
+							ng-hide="item.isEditing"><span class="fa-solid fa-pen"></span></button>
+						<button type="submit" class="btn btn-link text-success" ng-show="item.isEditing"><span
+								class="fa-solid fa-check"></span></button>
+						<button type="button" class="btn btn-link text-danger" ng-click="vm.cancelEdition($index)"
+							ng-show="item.isEditing"><span class="fa-solid fa-xmark"></span></button>
+						<button type="button" class="btn btn-link text-danger" ng-click="vm.remove($index)"><span
+								class="fa-regular fa-trash-can"></span></button>
+					</div>
+				</form>
+			</li>
+		</ul>
+		<div class="alert alert-info" role="alert" ng-hide="vm.list.length">Empty</div>
+		<form ng-submit="vm.add()" class="input-group">
+			<input type="text" class="form-control" placeholder="New item" ng-model="vm.newItem">
+			<button class="btn btn-outline-secondary" type="submit"><span class="fa-solid fa-plus"></span></button>
+		</form>
+	</div>
+</div>
