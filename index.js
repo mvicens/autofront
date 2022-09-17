@@ -26,10 +26,11 @@ const paths = {
 	dist: 'dist/'
 };
 paths.srcIndexHtml = paths.src + indexHtmlFile;
+paths.srcCss = paths.src + stylesFolder + cssFullFilename;
 paths.srcSass = paths.src + getFiles('scss');
 paths.srcLess = paths.src + getFiles('less');
 paths.srcJs = paths.src + getFiles('js');
-paths.srcOthers = [paths.src + allFiles, '!' + paths.srcIndexHtml, '!' + paths.srcSass, '!' + paths.srcLess, '!' + paths.srcJs];
+paths.srcOthers = [paths.src + allFiles, '!' + paths.srcIndexHtml, '!' + paths.srcCss, '!' + paths.srcSass, '!' + paths.srcLess, '!' + paths.srcJs];
 
 const nl = '\n',
 	tab = '	';
@@ -57,13 +58,16 @@ gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<
 gulp.task('index-domain', () => gulp.src(paths.tmp + getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulp.series('index-build', 'index-domain'));
 gulp.task('styles', () => {
-	return mergeStream(getCssStream('scss', gulpSass, '@import "variables";'), getCssStream('less', $.less))
+	return mergeStream(getCssStream('css'), getCssStream('scss', gulpSass, '@import "variables";'), getCssStream('less', $.less))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp + stylesFolder))
 		.pipe(browserSync.stream());
 
 	function getCssStream(ext, process, extraCode) {
-		return gulp.src(paths.src + stylesFolder + cssFilename + '.' + ext, { allowEmpty: true }).pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+		let stream = gulp.src(paths.src + stylesFolder + cssFilename + '.' + ext, { allowEmpty: true });
+		if (process)
+			return stream.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+		return stream;
 	}
 });
 gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'], true)).pipe(gulp.dest(paths.tmp + 'fonts/')));
@@ -81,7 +85,7 @@ gulp.task('browser', gulp.series('build:tmp', (cb) => {
 }));
 gulp.task('serve', gulp.series('browser', () => {
 	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
-	gulp.watch([paths.srcSass, paths.srcLess], gulp.task('styles'));
+	gulp.watch([paths.srcCss, paths.srcSass, paths.srcLess], gulp.task('styles'));
 	gulp.watch(paths.srcOthers, gulp.task('others'));
 	gulp.watch([paths.tmp + allFiles, '!' + paths.tmp + stylesFolder + cssFullFilename], function (cb) {
 		browserSync.reload();

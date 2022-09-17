@@ -127,6 +127,6 @@ Fixes and improvements to do:
 
 * Once the server watch for changes:
   * Synchronize also the deletion of source files.
-  * Resolve overwriting bug between pure CSS and preprocessors (Less/Sass).
+  * ~~Resolve overwriting bug between pure CSS and preprocessors (Less/Sass).~~
 * Replace Bower as dependency manager.
 * Migrate AngularJS to new [Angular](https://angular.io).
