@@ -66,9 +66,9 @@ Other command options, that appear immediately below, are available. And to use 
 
 Mainly the Gulp ones are the following:
 
-* `gulp` or `gulp serve` are for running a test server and develop with live reload.
-* `gulp build` only builds production code, the distributable application (`dist` folder).
-* With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs that last version but without reload.
+- `gulp` or `gulp serve` are for running a test server and develop with live reload.
+- `gulp build` only builds production code, the distributable application (`dist` folder).
+- With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs that last version but without reload.
 
 ### Domains
 
@@ -125,8 +125,8 @@ Any asset (e.g. a PDF document) will keep the location path and, particularly at
 
 Fixes and improvements to do:
 
-* Once the server watch for changes:
-  * Synchronize also the deletion of source files.
-  * ~~Resolve overwriting bug between pure CSS and preprocessors (Less/Sass).~~
-* Replace Bower as dependency manager.
-* Migrate AngularJS to new [Angular](https://angular.io).
+- Once the server watch for changes:
+  - Synchronize also the deletion of source files.
+  - ~~Resolve overwriting bug between pure CSS and preprocessors (Less/Sass).~~
+- Replace Bower as dependency manager.
+- Migrate AngularJS to new [Angular](https://angular.io).
