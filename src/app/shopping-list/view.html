@@ -10,14 +10,14 @@
 					<span ng-hide="item.isEditing">{{item.name}}</span>
 					<input type="text" class="form-control" ng-model="item.name" ng-show="item.isEditing">
 					<div class="btn-group">
-						<button type="button" class="btn btn-link" ng-click="vm.edit($index)"
-							ng-hide="item.isEditing"><span class="fa-solid fa-pen"></span></button>
-						<button type="submit" class="btn btn-link text-success" ng-show="item.isEditing"><span
-								class="fa-solid fa-check"></span></button>
+						<button type="button" class="btn btn-link" ng-click="vm.edit($index)" title="Edit"
+							ng-hide="item.isEditing"><span class="fa-solid fa-pencil"></span></button>
+						<button type="submit" class="btn btn-link text-success" title="Accept"
+							ng-show="item.isEditing"><span class="fa-solid fa-check"></span></button>
 						<button type="button" class="btn btn-link text-danger" ng-click="vm.cancelEdition($index)"
-							ng-show="item.isEditing"><span class="fa-solid fa-xmark"></span></button>
-						<button type="button" class="btn btn-link text-danger" ng-click="vm.remove($index)"><span
-								class="fa-regular fa-trash-can"></span></button>
+							title="Cancel" ng-show="item.isEditing"><span class="fa-solid fa-xmark"></span></button>
+						<button type="button" class="btn btn-link text-danger" ng-click="vm.remove($index)"
+							title="Remove"><span class="fa-solid fa-trash"></span></button>
 					</div>
 				</form>
 			</li>
@@ -25,7 +25,8 @@
 		<div class="alert alert-info" role="alert" ng-hide="vm.list.length">Empty</div>
 		<form ng-submit="vm.add()" class="input-group">
 			<input type="text" class="form-control" placeholder="New item" ng-model="vm.newItem">
-			<button class="btn btn-outline-secondary" type="submit"><span class="fa-solid fa-plus"></span></button>
+			<button type="submit" class="btn btn-outline-secondary" title="Add"><span
+					class="fa-solid fa-plus"></span></button>
 		</form>
 	</div>
 </div>

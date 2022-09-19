@@ -35,12 +35,14 @@
 
 		function cancelEdition(i) {
 			var item = vm.list[i];
+			if (item.name != item.$$old && !confirmForSure())
+				return;
 			item.name = item.$$old;
 			finishEdition(i);
 		}
 
 		function remove(i) {
-			if (confirm('Are you sure?'))
+			if (confirmForSure())
 				vm.list.splice(i, 1);
 		}
 
@@ -52,6 +54,10 @@
 			var item = vm.list[i];
 			delete item.$$old;
 			item.isEditing = false;
+		}
+
+		function confirmForSure() {
+			return confirm('Are you sure?');
 		}
 
 		function activate() {
