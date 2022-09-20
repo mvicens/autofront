@@ -9,7 +9,8 @@ const gulp = require('gulp'),
 	injStr = $.injectString,
 	gulpSass = $.sass(require('sass')),
 	notifyError = $.notify.onError(error => error.message),
-	browserSync = require('browser-sync').create();
+	browserSync = require('browser-sync').create(),
+	deleteEmpty = require('delete-empty');
 
 let domain = undefined;
 
@@ -86,7 +87,10 @@ gulp.task('browser', gulp.series('build:tmp', (cb) => {
 gulp.task('serve', gulp.series('browser', () => {
 	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
 	gulp.watch([paths.srcCss, paths.srcLess, paths.srcSass], gulp.task('styles'));
-	gulp.watch(paths.srcOthers, gulp.task('others'));
+	gulp.watch(paths.srcOthers, gulp.task('others')).on('unlink', function (path) {
+		gulp.src(path.replaceAll('\\', '/').replace(paths.src, paths.tmp).replace('.pug', '.html')).pipe($.clean());
+		deleteEmpty(paths.tmp);
+	});
 	gulp.watch([paths.tmp + allFiles, '!' + paths.tmp + stylesFolder + cssFullFilename], function (cb) {
 		browserSync.reload();
 		cb();
@@ -96,7 +100,7 @@ gulp.task('serve', gulp.series('browser', () => {
 gulp.task('del:dist', () => delFolder(paths.dist));
 gulp.task('copy', gulp.series('del:dist', () => gulp.src(paths.tmp + allFiles).pipe(gulp.dest(paths.dist))));
 gulp.task('templates-build', () => gulp.src([paths.dist + getFiles('html'), '!' + paths.dist + indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, { module: 'app', transformUrl: function (url) { return url.slice(1); } })).pipe(gulp.dest(paths.dist)));
-gulp.task('templates-clean', () => require('delete-empty')(paths.dist));
+gulp.task('templates-clean', () => deleteEmpty(paths.dist));
 gulp.task('templates', gulp.series('templates-build', 'templates-clean'));
 gulp.task('build', gulp.series('build:tmp', 'copy', 'templates', () => {
 	const indexHtmlFilter = filter('html'),
