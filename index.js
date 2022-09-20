@@ -27,10 +27,10 @@ const paths = {
 };
 paths.srcIndexHtml = paths.src + indexHtmlFile;
 paths.srcCss = paths.src + stylesFolder + cssFullFilename;
-paths.srcSass = paths.src + getFiles('scss');
 paths.srcLess = paths.src + getFiles('less');
+paths.srcSass = paths.src + getFiles('scss');
 paths.srcJs = paths.src + getFiles('js');
-paths.srcOthers = [paths.src + allFiles, '!' + paths.srcIndexHtml, '!' + paths.srcCss, '!' + paths.srcSass, '!' + paths.srcLess, '!' + paths.srcJs];
+paths.srcOthers = [paths.src + allFiles, '!' + paths.srcIndexHtml, '!' + paths.srcCss, '!' + paths.srcLess, '!' + paths.srcSass, '!' + paths.srcJs];
 
 const nl = '\n',
 	tab = '	';
@@ -52,21 +52,21 @@ gulp.task('check', () => {
 	return gulp.src(paths.src)
 		.pipe($.notify(isMatched ? `Matching domain: "${domainIndex}".` : 'No domain matched.'));
 });
-
 gulp.task('del', () => delFolder(paths.tmp));
 gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl + tab + `<link rel="stylesheet" href="${stylesFolder}${cssFullFilename}">`)).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
 gulp.task('index-domain', () => gulp.src(paths.tmp + getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
 gulp.task('index', gulp.series('index-build', 'index-domain'));
 gulp.task('styles', () => {
-	return mergeStream(getCssStream('css'), getCssStream('scss', gulpSass, '@import "variables";'), getCssStream('less', $.less))
+	return mergeStream(getStream('css'), getStream('less', $.less), getStream('scss', gulpSass, '@import "variables";'))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp + stylesFolder))
 		.pipe(browserSync.stream());
 
-	function getCssStream(ext, process, extraCode) {
+	function getStream(ext, process, extraCode) {
 		let stream = gulp.src(paths.src + stylesFolder + cssFilename + '.' + ext, { allowEmpty: true });
 		if (process)
-			return stream.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl)).pipe($.wiredep()).pipe(process()).on('error', notifyError);
+			return stream.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl)).pipe($.wiredep())
+				.pipe(process()).on('error', notifyError);
 		return stream;
 	}
 });
@@ -85,7 +85,7 @@ gulp.task('browser', gulp.series('build:tmp', (cb) => {
 }));
 gulp.task('serve', gulp.series('browser', () => {
 	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
-	gulp.watch([paths.srcCss, paths.srcSass, paths.srcLess], gulp.task('styles'));
+	gulp.watch([paths.srcCss, paths.srcLess, paths.srcSass], gulp.task('styles'));
 	gulp.watch(paths.srcOthers, gulp.task('others'));
 	gulp.watch([paths.tmp + allFiles, '!' + paths.tmp + stylesFolder + cssFullFilename], function (cb) {
 		browserSync.reload();
