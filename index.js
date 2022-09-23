@@ -36,7 +36,11 @@ paths.srcOthers = [paths.src + allFiles, '!' + paths.srcIndexHtml, '!' + paths.s
 const nl = '\n',
 	tab = '	';
 
-gulp.task('check', () => {
+function clean() {
+	return delFolder(paths.tmp);
+}
+
+function manageDomain() {
 	const pckg = require(path.resolve('package.json')),
 		domains = pckg.domains;
 	let domainIndex = args[0] || 'local';
@@ -52,12 +56,29 @@ gulp.task('check', () => {
 	const isMatched = domain !== undefined;
 	return gulp.src(paths.src)
 		.pipe($.notify(isMatched ? `Matching domain: "${domainIndex}".` : 'No domain matched.'));
-});
-gulp.task('del', () => delFolder(paths.tmp));
-gulp.task('index-build', () => gulp.src(paths.srcIndexHtml).pipe(injStr.after('<!-- endbuild -->', nl + tab + `<link rel="stylesheet" href="${stylesFolder}${cssFullFilename}">`)).pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError).pipe($.wiredep()).pipe($.useref()).pipe(gulp.dest(paths.tmp)));
-gulp.task('index-domain', () => gulp.src(paths.tmp + getFiles('js')).pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain)).pipe(gulp.dest(paths.tmp)));
-gulp.task('index', gulp.series('index-build', 'index-domain'));
-gulp.task('styles', () => {
+}
+manageDomain.displayName = 'manage-domain';
+
+function buildIndex() {
+	return gulp.src(paths.srcIndexHtml)
+		.pipe(injStr.after('<!-- endbuild -->', nl + tab + `<link rel="stylesheet" href="${stylesFolder}${cssFullFilename}">`))
+		.pipe($.inject(gulp.src(paths.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError)
+		.pipe($.wiredep())
+		.pipe($.useref())
+		.pipe(gulp.dest(paths.tmp));
+}
+buildIndex.displayName = 'build-index';
+
+function injectDomain() {
+	return gulp.src(paths.tmp + getFiles('js'))
+		.pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain))
+		.pipe(gulp.dest(paths.tmp));
+}
+injectDomain.displayName = 'inject-domain';
+
+const indexAndJs = gulp.series(buildIndex, injectDomain);
+
+function styles() {
 	return mergeStream(getStream('css'), getStream('less', $.less), getStream('scss', gulpSass, '@import "variables";'))
 		.pipe($.concat(cssFullFilename))
 		.pipe(gulp.dest(paths.tmp + stylesFolder))
@@ -66,43 +87,84 @@ gulp.task('styles', () => {
 	function getStream(ext, process, extraCode) {
 		let stream = gulp.src(paths.src + stylesFolder + cssFilename + '.' + ext, { allowEmpty: true });
 		if (process)
-			return stream.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl)).pipe($.wiredep())
+			return stream
+				.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl))
+				.pipe($.wiredep())
 				.pipe(process()).on('error', notifyError);
 		return stream;
 	}
-});
-gulp.task('fonts', () => gulp.src(mainBowerFiles()).pipe(filter(['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'], true)).pipe(gulp.dest(paths.tmp + 'fonts/')));
-gulp.task('others', () => {
+}
+
+function fonts() {
+	return gulp.src(mainBowerFiles())
+		.pipe(filter(['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'], true))
+		.pipe(gulp.dest(paths.tmp + 'fonts/'));
+}
+
+function others() {
 	const pugFilter = filter('pug');
 	return gulp.src(paths.srcOthers)
 		.pipe(pugFilter).pipe($.pug()).on('error', notifyError).pipe(pugFilter.restore)
 		.pipe(gulp.dest(paths.tmp));
-});
-gulp.task('about', () => gulp.src('package.json').pipe($.about()).pipe(gulp.dest(paths.tmp)));
-gulp.task('build:tmp', gulp.series('del', 'check', gulp.parallel('index', 'styles', 'fonts', 'others', 'about')));
-gulp.task('browser', gulp.series('build:tmp', (cb) => {
+}
+
+function about() {
+	return gulp.src('package.json')
+		.pipe($.about())
+		.pipe(gulp.dest(paths.tmp));
+}
+
+const buildTmp = gulp.series(
+	gulp.parallel(clean, manageDomain),
+	gulp.parallel(indexAndJs, styles, fonts, others, about)
+);
+
+function browser(cb) {
 	browserSyncInit(paths.tmp);
 	cb();
-}));
-gulp.task('serve', gulp.series('browser', () => {
-	gulp.watch([paths.srcIndexHtml, paths.srcJs], gulp.task('index'));
-	gulp.watch([paths.srcCss, paths.srcLess, paths.srcSass], gulp.task('styles'));
-	gulp.watch(paths.srcOthers, gulp.task('others')).on('unlink', function (path) {
-		gulp.src(path.replaceAll('\\', '/').replace(paths.src, paths.tmp).replace('.pug', '.html')).pipe($.clean());
+}
+
+function watch() {
+	gulp.watch([paths.srcIndexHtml, paths.srcJs], indexAndJs);
+	gulp.watch([paths.srcCss, paths.srcLess, paths.srcSass], styles);
+	gulp.watch(paths.srcOthers, others).on('unlink', function (path) {
+		gulp.src(path.replaceAll('\\', '/').replace(paths.src, paths.tmp).replace('.pug', '.html'))
+			.pipe($.clean());
 		deleteEmpty(paths.tmp);
 	});
 	gulp.watch([paths.tmp + allFiles, '!' + paths.tmp + stylesFolder + cssFullFilename], function (cb) {
 		browserSync.reload();
 		cb();
 	});
-}));
+}
 
-gulp.task('del:dist', () => delFolder(paths.dist));
-gulp.task('copy', gulp.series('del:dist', () => gulp.src(paths.tmp + allFiles).pipe(gulp.dest(paths.dist))));
-gulp.task('templates-build', () => gulp.src([paths.dist + getFiles('html'), '!' + paths.dist + indexHtmlFile]).pipe($.cleanDest(paths.dist)).pipe(minifyHtml()).pipe($.angularTemplatecache(jsTemplatesFile, { module: 'app', transformUrl: function (url) { return url.slice(1); } })).pipe(gulp.dest(paths.dist)));
-gulp.task('templates-clean', () => deleteEmpty(paths.dist));
-gulp.task('templates', gulp.series('templates-build', 'templates-clean'));
-gulp.task('build', gulp.series('build:tmp', 'copy', 'templates', () => {
+gulp.task('serve', gulp.series(buildTmp, browser, watch));
+
+function cleanDist() {
+	return delFolder(paths.dist);
+}
+cleanDist.displayName = 'clean:dist';
+
+function copy() {
+	return gulp.src(paths.tmp + allFiles)
+		.pipe(gulp.dest(paths.dist));
+}
+
+function buildTemplates() {
+	return gulp.src([paths.dist + getFiles('html'), '!' + paths.dist + indexHtmlFile])
+		.pipe($.cleanDest(paths.dist))
+		.pipe(minifyHtml())
+		.pipe($.angularTemplatecache(jsTemplatesFile, { module: 'app', transformUrl: function (url) { return url.slice(1); } }))
+		.pipe(gulp.dest(paths.dist));
+}
+buildTemplates.displayName = 'build-templates';
+
+function cleanTemplates() {
+	return deleteEmpty(paths.dist);
+}
+cleanTemplates.displayName = 'clean-templates';
+
+function finishBuild() {
 	const indexHtmlFilter = filter('html'),
 		cssFilter = filter('css'),
 		jsFilter = filter('js'),
@@ -119,8 +181,18 @@ gulp.task('build', gulp.series('build:tmp', 'copy', 'templates', () => {
 		.pipe(jsonFilter).pipe($.jsonmin()).pipe(jsonFilter.restore)
 		.pipe($.size({ showFiles: true }))
 		.pipe(gulp.dest(paths.dist));
-}));
-gulp.task('serve:dist', gulp.series('build', () => browserSyncInit(paths.dist)));
+}
+finishBuild.displayName = 'finish-build';
+
+gulp.task('build', gulp.series(buildTmp, cleanDist, copy, buildTemplates, cleanTemplates, finishBuild));
+
+function browserDist(cb) {
+	browserSyncInit(paths.dist);
+	cb();
+}
+browserDist.displayName = 'browser:dist';
+
+gulp.task('serve:dist', gulp.series('build', browserDist));
 
 gulp.task('default', gulp.task('serve'));
 
