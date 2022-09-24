@@ -123,8 +123,7 @@ Any asset (e.g. a PDF document) will keep the location path and, particularly at
 
 ## Pending
 
-Fixes and improvements to do:
+Improvements to do:
 
-- ~~Once the server watch for changes, synchronize also the deletion of source files.~~
 - Replace Bower as dependency manager.
 - Migrate AngularJS to new [Angular](https://angular.io).
