@@ -3,12 +3,15 @@
 		.controller('FooterController', FooterController);
 
 	function FooterController($scope, $http) {
+		$scope.name;
 		$scope.version;
 		$scope.links;
 
 		function activate() {
 			$http.get('about.json').then(function (response) {
-				$scope.version = response.data.version;
+				var data = response.data;
+				$scope.name = _.startCase(data.name);
+				$scope.version = data.version;
 			});
 			$scope.links = [
 				{

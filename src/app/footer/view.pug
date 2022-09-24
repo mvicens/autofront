@@ -2,6 +2,6 @@
 	div
 		| Deployed by
 		|
-		span.lead Autofront v{{version}}
+		span.lead {{name}} v{{version}}
 	ul.list-inline.lead
 		li.list-inline-item(ng-repeat='link in links'): a(ng-href='{{link.url}}'): span.fa-brands(ng-class='"fa-"+link.icon')
