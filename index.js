@@ -55,7 +55,7 @@ function manageDomain() {
 		domain = domains[domainIndex];
 	}
 	const isMatched = domain !== undefined;
-	return gulp.src(globs.src)
+	return gulp.src(globs.src, { read: false })
 		.pipe($.notify(isMatched ? `Matching domain: "${domainIndex}".` : 'No domain matched.'));
 }
 manageDomain.displayName = 'manage-domain';
@@ -129,7 +129,7 @@ function watch() {
 	gulp.watch(globs.srcIndexAndSrcJs, indexAndJs);
 	gulp.watch(globs.srcStyles, styles);
 	gulp.watch(globs.srcOthers, others).on('unlink', function (path) {
-		gulp.src(path.replaceAll('\\', '/').replace(globs.src, globs.tmp).replace('.pug', '.html'))
+		gulp.src(path.replaceAll('\\', '/').replace(globs.src, globs.tmp).replace('.pug', '.html'), { read: false })
 			.pipe($.clean());
 		deleteEmpty(globs.tmp);
 	});
