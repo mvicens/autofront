@@ -24,14 +24,14 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "^1.8.3",
-    "lodash": "^4.17.21",
     "bootstrap": "^5.2.1",
-    "font-awesome": "^6.2.0"
+    "font-awesome": "^6.2.0",
+    "angular": "^1.8.3",
+    "lodash": "^4.17.21"
   },
   "overrides": {
     "bootstrap": {
-      "main": "scss/bootstrap.scss"
+      "main": "dist/css/bootstrap.css"
     },
     "font-awesome": {
       "main": [
