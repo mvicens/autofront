@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "serve": "gulp",
-    "serve:dist": "gulp serve:dist",
-    "build": "gulp build",
+    "serve:dist": "gulp serve:dist --development",
+    "build": "gulp build --production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -62,14 +62,5 @@
     "main-bower-files": "^2.13.1",
     "merge-stream": "^1.0.1",
     "sass": "^1.38.2"
-  },
-  "domains": {
-    "local": "http://localhost:8081/",
-    "development": "http://dev.mydomain/",
-    "production": "http://mydomain/"
-  },
-  "domainAliases": {
-    "prod": "production",
-    "dev": "development"
   }
 }

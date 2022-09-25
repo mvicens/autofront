@@ -72,11 +72,19 @@ The Gulp ones are the following:
 
 ### Domains
 
-On executing Gulp command, an additional parameter can be included (e.g.: `gulp --dev` or `gulp build --pro`) to indicate the domain of connection path. Defaults to `--local`.
+On executing Gulp command, an additional parameter can be included (e.g.: `gulp --development` or `gulp build --production`) to indicate the domain of connection path. Defaults to `--local`.
 
-These domain URLs would be searched in `package.json` listed in the property `domains` (optionally also `domainAliases`, to assign domain name for each alias).
+To define them, list it like:
 
-And, to capture the selected URL string, put `{{AUTOFRONT_DOMAIN}}` where it would be located in your source code.
+```js
+let autofront = require('autofront');
+autofront.domains = {
+	local: 'http://localhost:8081/',
+	// ...
+};
+```
+
+And, to capture the selected URL string, put `${AUTOFRONT_DOMAIN}` where it would be located in your JS source code.
 
 ## Support
 

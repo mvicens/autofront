@@ -1,7 +1,8 @@
-this.html5Mode = html5Mode;
+let autofront = this;
+autofront.html5Mode = html5Mode;
+autofront.domains = {};
 
 const gulp = require('gulp'),
-	path = require('path'),
 	args = require('get-gulp-args')(),
 	mergeStream = require('merge-stream'),
 	mainBowerFiles = require('main-bower-files'),
@@ -42,21 +43,11 @@ function clean() {
 }
 
 function manageDomain() {
-	const pckg = require(path.resolve('package.json')),
-		domains = pckg.domains;
-	let domainIndex = args[0] || 'local';
-	if (domains) {
-		const domainAliases = pckg.domainAliases;
-		if (domainAliases) {
-			const alias = domainAliases[domainIndex];
-			if (alias)
-				domainIndex = alias;
-		}
-		domain = domains[domainIndex];
-	}
+	const name = args[0] || 'local';
+	domain = autofront.domains?.[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })
-		.pipe($.notify(isMatched ? `Matching domain: "${domainIndex}".` : 'No domain matched.'));
+		.pipe($.notify(isMatched ? `Matching domain: "${name}".` : 'No domain matched.'));
 }
 manageDomain.displayName = 'manage-domain';
 
@@ -72,7 +63,7 @@ buildIndex.displayName = 'build-index';
 
 function injectDomain() {
 	return gulp.src(globs.tmp + jsFiles)
-		.pipe(injStr.replace('{{AUTOFRONT_DOMAIN}}', domain))
+		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain))
 		.pipe(gulp.dest(globs.tmp));
 }
 injectDomain.displayName = 'inject-domain';
@@ -111,7 +102,7 @@ function others() {
 
 function about() {
 	return gulp.src('package.json')
-		.pipe($.about())
+		.pipe($.about({ inject: { domain } }))
 		.pipe(gulp.dest(globs.tmp));
 }
 
