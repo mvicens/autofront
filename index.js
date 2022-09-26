@@ -43,7 +43,7 @@ function clean() {
 }
 
 function manageDomain() {
-	const name = args[0] || 'local';
+	const name = args.domain || args.d || 'local';
 	domain = autofront.domains?.[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })

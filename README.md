@@ -72,7 +72,7 @@ The Gulp ones are the following:
 
 ### Domains
 
-On executing Gulp command, an additional parameter can be included (e.g.: `gulp --development` or `gulp build --production`) to indicate the domain of connection path. Defaults to `--local`.
+On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain development` or `gulp build -d production`) to indicate the domain of connection path. Defaults to "local".
 
 To define them, list it like:
 

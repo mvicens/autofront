@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "serve": "gulp",
-    "serve:dist": "gulp serve:dist --development",
-    "build": "gulp build --production",
+    "serve:dist": "gulp serve:dist -d=development",
+    "build": "gulp build -d=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
