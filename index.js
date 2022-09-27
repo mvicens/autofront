@@ -78,9 +78,10 @@ function styles() {
 
 	function getStream(ext, process, extraCode) {
 		let stream = gulp.src(globs.src + stylesDir + cssFilename + '.' + ext, { allowEmpty: true });
+		const sep = nl + nl;
 		if (process)
 			return stream
-				.pipe(injStr.prepend((extraCode ? extraCode + nl : '') + '// bower:' + ext + nl + '// endbower' + nl))
+				.pipe(injStr.prepend(sep + (extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
 				.pipe($.wiredep())
 				.pipe(process()).on('error', notifyError);
 		return stream;
@@ -164,7 +165,7 @@ function finishBuild() {
 		imgFilter = filter(['png', 'jpg', 'gif', 'svg']),
 		jsonFilter = filter('json');
 	return gulp.src(globs.dist + allFiles)
-		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', `<script src="${jsTemplatesFile}"></script>` + nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
+		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', tab + `<script src="${jsTemplatesFile}"></script>` + nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
 		.pipe(cssFilter).pipe($.cssnano({ zindex: false })).pipe(cssFilter.restore)
 		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.terser()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
