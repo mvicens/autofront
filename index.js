@@ -13,7 +13,8 @@ const gulp = require('gulp'),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty');
 
-let domain = undefined;
+let defDomain = 'production',
+	domain = undefined;
 
 const allFiles = getGlob(),
 	indexHtmlFile = 'index.html',
@@ -38,12 +39,18 @@ globs.tmpAllFiles = globs.tmp + allFiles;
 const nl = '\n',
 	tab = '	';
 
+function setDefault(cb) {
+	defDomain = 'development';
+	cb();
+}
+setDefault.displayName = 'set-default';
+
 function clean() {
 	return delDir(globs.tmp);
 }
 
 function manageDomain() {
-	const name = args.domain || args.d || 'local';
+	const name = args.domain || args.d || defDomain;
 	domain = autofront.domains?.[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })
@@ -131,7 +138,7 @@ function watch() {
 	});
 }
 
-gulp.task('serve', gulp.series(buildTmp, browser, watch));
+gulp.task('serve', gulp.series(setDefault, buildTmp, browser, watch));
 
 function cleanDist() {
 	return delDir(globs.dist);
@@ -185,7 +192,7 @@ function browserDist(cb) {
 }
 browserDist.displayName = 'browser:dist';
 
-gulp.task('serve:dist', gulp.series('build', browserDist));
+gulp.task('serve:dist', gulp.series(setDefault, 'build', browserDist));
 
 gulp.task('default', gulp.task('serve'));
 

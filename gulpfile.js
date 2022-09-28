@@ -1,6 +1,6 @@
 let autofront = require('./index');
 autofront.domains = {
-	local: 'http://localhost:8081/',
-	development: 'http://dev.mydomain/',
+	development: 'http://localhost:3001/',
+	preproduction: 'http://dev.mydomain/',
 	production: 'http://mydomain/'
 };

@@ -72,14 +72,14 @@ The Gulp ones are the following:
 
 ### Domains
 
-On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain development` or `gulp build -d production`) to indicate the domain of connection path. Defaults to "local".
+On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain production` or `gulp build -d development`) to indicate the domain of connection path. Defaults to "development" with tasks `serve` and `serve:dist`; and to "production" with `build`".
 
 To define them, list it like:
 
 ```js
 let autofront = require('autofront');
 autofront.domains = {
-	local: 'http://localhost:8081/',
+	development: 'http://localhost:3001/',
 	// ...
 };
 ```
