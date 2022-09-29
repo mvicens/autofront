@@ -22,7 +22,8 @@ const allFiles = getGlob(),
 	cssFilename = 'index',
 	cssFile = cssFilename + '.css';
 let stylesDir = 'styles/',
-	jsTemplatesFile = 'scripts/templates.js';
+	scriptsDir = 'scripts/',
+	jsTemplatesFile = scriptsDir + 'templates.js';
 
 const globs = {
 	src: 'src/',
@@ -36,7 +37,7 @@ globs.srcStyles = [globs.src + stylesDir + cssFile, globs.src + getGlob('less'),
 globs.srcOthers = [globs.src + allFiles, ...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob)];
 globs.tmpAllFiles = globs.tmp + allFiles;
 
-const nl = '\n',
+const nl = '\r\n',
 	tab = '	';
 
 function setDefault(cb) {
@@ -59,12 +60,31 @@ function manageDomain() {
 manageDomain.displayName = 'manage-domain';
 
 function buildIndex() {
+	const filename = 'vendor';
 	return gulp.src(globs.srcIndexHtml)
-		.pipe(injStr.after('<!-- endbuild -->', nl + tab + `<link rel="stylesheet" href="${stylesDir + cssFile}">`))
+		.pipe(injStrBefore('head', [
+			`<!-- build:css ${stylesDir + filename}.css -->`,
+			'<!-- bower:css --><!-- endbower -->',
+			'<!-- endbuild -->',
+			`<link rel="stylesheet" href="${stylesDir + cssFile}">`
+		]))
+		.pipe(injStrBefore('body', [
+			`<!-- build:js ${scriptsDir + filename}.js -->`,
+			'<!-- bower:js --><!-- endbower -->',
+			'<!-- endbuild -->',
+			`<!-- build:js ${scriptsDir + cssFilename}.js -->`,
+			'<!-- inject:js -->',
+			'<!-- endinject -->',
+			'<!-- endbuild -->'
+		]))
 		.pipe($.inject(gulp.src(globs.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
 		.pipe(gulp.dest(globs.tmp));
+
+	function injStrBefore(tagName, strs) {
+		return injStr.before(`</${tagName}>`, tab + strs.join(nl + tab) + nl);
+	}
 }
 buildIndex.displayName = 'build-index';
 
@@ -199,6 +219,7 @@ gulp.task('default', gulp.task('serve'));
 function html5Mode() {
 	const prefix = '/';
 	stylesDir = prefix + stylesDir;
+	scriptsDir = prefix + scriptsDir;
 	jsTemplatesFile = prefix + jsTemplatesFile;
 }
 

@@ -26,27 +26,7 @@ npm install --save-dev autofront
 
 ### Main page
 
-In `src` directory, place `index.html` whose content would have to look basically like:
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-	<!-- build:css styles/vendor.css -->
-	<!-- bower:css --><!-- endbower -->
-	<!-- endbuild -->
-</head>
-<body>
-	<!-- build:js scripts/vendor.js -->
-	<!-- bower:js --><!-- endbower -->
-	<!-- endbuild -->
-	<!-- build:js scripts/app.js -->
-	<!-- inject:js -->
-	<!-- endinject -->
-	<!-- endbuild -->
-</body>
-</html>
-```
+In `src` directory, place `index.html` without embedding tags (`<link>`s and `<script>`s).
 
 ### Run
 
