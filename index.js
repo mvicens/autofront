@@ -1,5 +1,5 @@
 let autofront = this;
-autofront.html5Mode = html5Mode;
+autofront.html5Mode = false;
 autofront.domains = {};
 
 const gulp = require('gulp'),
@@ -50,14 +50,20 @@ function clean() {
 	return delDir(globs.tmp);
 }
 
-function manageDomain() {
+function init() {
+	if (autofront.html5Mode) {
+		const prefix = '/';
+		stylesDir = prefix + stylesDir;
+		scriptsDir = prefix + scriptsDir;
+		jsTemplatesFile = prefix + jsTemplatesFile;
+	}
+
 	const name = args.domain || args.d || defDomain;
 	domain = autofront.domains?.[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })
 		.pipe($.notify(isMatched ? `Matching domain: "${name}".` : 'No domain matched.'));
 }
-manageDomain.displayName = 'manage-domain';
 
 function buildIndex() {
 	const filename = 'vendor';
@@ -135,7 +141,7 @@ function about() {
 }
 
 const buildTmp = gulp.series(
-	gulp.parallel(clean, manageDomain),
+	gulp.parallel(clean, init),
 	gulp.parallel(indexAndJs, styles, fonts, others, about)
 );
 
@@ -215,13 +221,6 @@ browserDist.displayName = 'browser:dist';
 gulp.task('serve:dist', gulp.series(setDefault, 'build', browserDist));
 
 gulp.task('default', gulp.task('serve'));
-
-function html5Mode() {
-	const prefix = '/';
-	stylesDir = prefix + stylesDir;
-	scriptsDir = prefix + scriptsDir;
-	jsTemplatesFile = prefix + jsTemplatesFile;
-}
 
 function getGlob(ext = '*') {
 	const glob = '**/*.';
