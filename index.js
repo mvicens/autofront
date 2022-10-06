@@ -19,9 +19,10 @@ let defDomain = 'production',
 const allFiles = getGlob(),
 	indexHtmlFile = 'index.html',
 	jsFiles = getGlob('js'),
-	cssFilename = 'index',
-	cssFile = cssFilename + '.css';
-let stylesDir = 'styles/',
+	stylesDir = 'styles/',
+	indexFilename = 'index',
+	cssFile = indexFilename + '.css',
+	stylesCssFile = stylesDir + cssFile,
 	scriptsDir = 'scripts/',
 	jsTemplatesFile = scriptsDir + 'templates.js';
 
@@ -33,7 +34,7 @@ const globs = {
 globs.srcIndexHtml = globs.src + indexHtmlFile;
 globs.srcJs = globs.src + jsFiles;
 globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
-globs.srcStyles = [globs.src + stylesDir + cssFile, globs.src + getGlob('less'), globs.src + getGlob('scss')];
+globs.srcStyles = [globs.src + stylesCssFile, globs.src + getGlob('less'), globs.src + getGlob('scss')];
 globs.srcOthers = [globs.src + allFiles, ...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob)];
 globs.tmpAllFiles = globs.tmp + allFiles;
 
@@ -50,35 +51,32 @@ function clean() {
 	return delDir(globs.tmp);
 }
 
-function init() {
-	if (autofront.html5Mode) {
-		const prefix = '/';
-		stylesDir = prefix + stylesDir;
-		scriptsDir = prefix + scriptsDir;
-		jsTemplatesFile = prefix + jsTemplatesFile;
-	}
-
+function manageDomain() {
 	const name = args.domain || args.d || defDomain;
 	domain = autofront.domains?.[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })
 		.pipe($.notify(isMatched ? `Matching domain: "${name}".` : 'No domain matched.'));
 }
+manageDomain.displayName = 'manage-domain';
 
 function buildIndex() {
-	const filename = 'vendor';
-	return gulp.src(globs.srcIndexHtml)
-		.pipe(injStrBefore('head', [
+	const filename = 'vendor',
+		headStrs = [
 			`<!-- build:css ${stylesDir + filename}.css -->`,
 			'<!-- bower:css --><!-- endbower -->',
 			'<!-- endbuild -->',
-			`<link rel="stylesheet" href="${stylesDir + cssFile}">`
-		]))
+			`<link rel="stylesheet" href="${stylesCssFile}">`
+		];
+	if (autofront.html5Mode)
+		headStrs.unshift('<base href="/">');
+	return gulp.src(globs.srcIndexHtml)
+		.pipe(injStrBefore('head', headStrs))
 		.pipe(injStrBefore('body', [
 			`<!-- build:js ${scriptsDir + filename}.js -->`,
 			'<!-- bower:js --><!-- endbower -->',
 			'<!-- endbuild -->',
-			`<!-- build:js ${scriptsDir + cssFilename}.js -->`,
+			`<!-- build:js ${scriptsDir + indexFilename}.js -->`,
 			'<!-- inject:js -->',
 			'<!-- endinject -->',
 			'<!-- endbuild -->'
@@ -94,14 +92,20 @@ function buildIndex() {
 }
 buildIndex.displayName = 'build-index';
 
-function injectDomain() {
-	return gulp.src(globs.tmp + jsFiles)
-		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain))
-		.pipe(gulp.dest(globs.tmp));
+function injectJs() {
+	const filter = $.filter(function (file) {
+		return file.stem == indexFilename;
+	}, { restore: true });
+	let stream = gulp.src(globs.tmp + jsFiles)
+		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain));
+	if (autofront.html5Mode)
+		stream = stream
+			.pipe(filter).pipe(injStr.append(nl + '(function () {' + nl + tab + "angular.module('app')" + nl + tab + tab + '.config(config);' + nl + nl + tab + 'function config($locationProvider) {' + nl + tab + tab + '$locationProvider.html5Mode(true);' + nl + tab + '}' + nl + '})();')).pipe(filter.restore);
+	return stream.pipe(gulp.dest(globs.tmp));
 }
-injectDomain.displayName = 'inject-domain';
+injectJs.displayName = 'inject-js';
 
-const indexAndJs = gulp.series(buildIndex, injectDomain);
+const indexAndJs = gulp.series(buildIndex, injectJs);
 
 function styles() {
 	return mergeStream(getStream('css'), getStream('less', $.less), getStream('scss', gulpSass, '@import "variables";'))
@@ -110,7 +114,7 @@ function styles() {
 		.pipe(browserSync.stream());
 
 	function getStream(ext, process, extraCode) {
-		let stream = gulp.src(globs.src + stylesDir + cssFilename + '.' + ext, { allowEmpty: true });
+		let stream = gulp.src(globs.src + stylesDir + indexFilename + '.' + ext, { allowEmpty: true });
 		const sep = nl + nl;
 		if (process)
 			return stream
@@ -141,7 +145,7 @@ function about() {
 }
 
 const buildTmp = gulp.series(
-	gulp.parallel(clean, init),
+	gulp.parallel(clean, manageDomain),
 	gulp.parallel(indexAndJs, styles, fonts, others, about)
 );
 
@@ -158,7 +162,7 @@ function watch() {
 			.pipe($.clean());
 		deleteEmpty(globs.tmp);
 	});
-	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + stylesDir + cssFile], function (cb) {
+	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + stylesCssFile], function (cb) {
 		browserSync.reload();
 		cb();
 	});

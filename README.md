@@ -105,6 +105,8 @@ let autofront = require('autofront');
 autofront.html5Mode = true;
 ```
 
+Then, automatically, it will be enabled by [$locationProvider](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode) and a `<base>` injected.
+
 ### Others
 
 Any asset (e.g. a PDF document) will keep the location path and, particularly at production, will take place an images optimization.
