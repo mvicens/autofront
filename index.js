@@ -24,7 +24,13 @@ const allFiles = getGlob(),
 	cssFile = indexFilename + '.css',
 	stylesCssFile = stylesDir + cssFile,
 	scriptsDir = 'scripts/',
-	jsTemplatesFile = scriptsDir + 'templates.js';
+	cssComment = '<!-- autofrontcss -->',
+	endCssComment = '<!-- endautofrontcss -->',
+	jsComment = '<!-- autofrontjs -->',
+	html5ModeJsFile = scriptsDir + 'html5-mode.js',
+	endJsComment = '<!-- endautofrontjs -->',
+	jsTemplatesFile = scriptsDir + 'templates.js',
+	scriptsJsFile = scriptsDir + indexFilename + '.js';
 
 const globs = {
 	src: 'src/',
@@ -47,7 +53,7 @@ function setDefault(cb) {
 }
 setDefault.displayName = 'set-default';
 
-function clean() {
+function remove() {
 	return delDir(globs.tmp);
 }
 
@@ -63,27 +69,32 @@ manageDomain.displayName = 'manage-domain';
 function buildIndex() {
 	const filename = 'vendor',
 		headStrs = [
+			cssComment,
 			`<!-- build:css ${stylesDir + filename}.css -->`,
 			'<!-- bower:css --><!-- endbower -->',
 			'<!-- endbuild -->',
-			`<link rel="stylesheet" href="${stylesCssFile}">`
-		];
-	if (autofront.html5Mode)
-		headStrs.unshift('<base href="/">');
-	return gulp.src(globs.srcIndexHtml)
-		.pipe(injStrBefore('head', headStrs))
-		.pipe(injStrBefore('body', [
+			`<link rel="stylesheet" href="${stylesCssFile}">`,
+			endCssComment
+		],
+		bodyStrs = [
+			jsComment,
 			`<!-- build:js ${scriptsDir + filename}.js -->`,
 			'<!-- bower:js --><!-- endbower -->',
 			'<!-- endbuild -->',
-			`<!-- build:js ${scriptsDir + indexFilename}.js -->`,
 			'<!-- inject:js -->',
-			'<!-- endinject -->',
-			'<!-- endbuild -->'
-		]))
+			'<!-- endinject -->'
+		];
+	if (autofront.html5Mode) {
+		headStrs.unshift('<base href="/">');
+		bodyStrs.push(`<script src="${html5ModeJsFile}"></script>`);
+	}
+	return gulp.src(globs.srcIndexHtml)
+		.pipe(injStrBefore('head', headStrs))
+		.pipe(injStrBefore('body', [...bodyStrs, endJsComment]))
 		.pipe($.inject(gulp.src(globs.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
+		.pipe(gulp.src(globs.srcJs))
 		.pipe(gulp.dest(globs.tmp));
 
 	function injStrBefore(tagName, strs) {
@@ -92,20 +103,25 @@ function buildIndex() {
 }
 buildIndex.displayName = 'build-index';
 
-function injectJs() {
-	const filter = $.filter(function (file) {
-		return file.stem == indexFilename;
-	}, { restore: true });
-	let stream = gulp.src(globs.tmp + jsFiles)
-		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain));
-	if (autofront.html5Mode)
-		stream = stream
-			.pipe(filter).pipe(injStr.append(nl + '(function () {' + nl + tab + "angular.module('app')" + nl + tab + tab + '.config(config);' + nl + nl + tab + 'function config($locationProvider) {' + nl + tab + tab + '$locationProvider.html5Mode(true);' + nl + tab + '}' + nl + '})();')).pipe(filter.restore);
-	return stream.pipe(gulp.dest(globs.tmp));
+function injectDomain() {
+	return gulp.src(globs.tmp + jsFiles)
+		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain))
+		.pipe(gulp.dest(globs.tmp));
 }
-injectJs.displayName = 'inject-js';
+injectDomain.displayName = 'inject-domain';
 
-const indexAndJs = gulp.series(buildIndex, injectJs);
+const indexAndJs = gulp.series(buildIndex, injectDomain);
+
+function addJs(cb) {
+	if (autofront.html5Mode)
+		return $.addFiles([{
+			name: html5ModeJsFile,
+			content: '(function () {' + nl + tab + "angular.module('app')" + nl + tab + tab + '.config(config);' + nl + nl + tab + 'function config($locationProvider) {' + nl + tab + tab + '$locationProvider.html5Mode(true);' + nl + tab + '}' + nl + '})();'
+		}])
+			.pipe(gulp.dest(globs.tmp));
+	cb();
+}
+addJs.displayName = 'add-js';
 
 function styles() {
 	return mergeStream(getStream('css'), getStream('less', $.less), getStream('scss', gulpSass, '@import "variables";'))
@@ -145,8 +161,8 @@ function about() {
 }
 
 const buildTmp = gulp.series(
-	gulp.parallel(clean, manageDomain),
-	gulp.parallel(indexAndJs, styles, fonts, others, about)
+	gulp.parallel(remove, manageDomain),
+	gulp.parallel(indexAndJs, addJs, styles, fonts, others, about)
 );
 
 function browser(cb) {
@@ -170,10 +186,10 @@ function watch() {
 
 gulp.task('serve', gulp.series(setDefault, buildTmp, browser, watch));
 
-function cleanDist() {
+function removeDist() {
 	return delDir(globs.dist);
 }
-cleanDist.displayName = 'clean:dist';
+removeDist.displayName = 'remove:dist';
 
 function copy() {
 	return gulp.src(globs.tmpAllFiles)
@@ -189,10 +205,35 @@ function buildTemplates() {
 }
 buildTemplates.displayName = 'build-templates';
 
-function cleanTemplates() {
+function buildIndexDist() {
+	const replaces = [
+		[cssComment, `<!-- build:css ${stylesCssFile} -->`],
+		[endCssComment, '<!-- endbuild -->'],
+		[jsComment, `<!-- build:js ${scriptsJsFile} -->`],
+		[endJsComment, '<!-- endbuild -->']
+	];
+	var stream = gulp.src(globs.dist + indexHtmlFile)
+		.pipe(injStr.before(endJsComment, `<script src="${jsTemplatesFile}"></script>` + nl + tab));
+	for (let [search, str] of replaces)
+		stream = stream.pipe(injStr.replace(search, str));
+	return stream
+		.pipe($.useref())
+		.pipe(gulp.dest(globs.dist));
+}
+buildIndexDist.displayName = 'build-index:dist';
+
+function removeFiles() {
+	return gulp.src([
+		globs.dist + jsFiles, '!' + globs.dist + scriptsJsFile,
+		globs.dist + getGlob('css'), '!' + globs.dist + stylesCssFile
+	])
+		.pipe($.clean());
+}
+removeFiles.displayName = 'remove-files';
+
+function clean() {
 	return deleteEmpty(globs.dist);
 }
-cleanTemplates.displayName = 'clean-templates';
 
 function finishBuild() {
 	const indexHtmlFilter = filter('html'),
@@ -202,7 +243,7 @@ function finishBuild() {
 		imgFilter = filter(['png', 'jpg', 'gif', 'svg']),
 		jsonFilter = filter('json');
 	return gulp.src(globs.dist + allFiles)
-		.pipe(indexHtmlFilter).pipe(injStr.before('</body>', tab + `<script src="${jsTemplatesFile}"></script>` + nl)).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
+		.pipe(indexHtmlFilter).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
 		.pipe(cssFilter).pipe($.cssnano({ zindex: false })).pipe(cssFilter.restore)
 		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.terser()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
@@ -214,7 +255,7 @@ function finishBuild() {
 }
 finishBuild.displayName = 'finish-build';
 
-gulp.task('build', gulp.series(buildTmp, cleanDist, copy, buildTemplates, cleanTemplates, finishBuild));
+gulp.task('build', gulp.series(buildTmp, removeDist, copy, buildTemplates, buildIndexDist, removeFiles, clean, finishBuild));
 
 function browserDist(cb) {
 	browserSyncInit(globs.dist);
