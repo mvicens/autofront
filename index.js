@@ -43,6 +43,7 @@ globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
 globs.srcStyles = [globs.src + stylesCssFile, globs.src + getGlob('less'), globs.src + getGlob('scss')];
 globs.srcOthers = [globs.src + allFiles, ...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob)];
 globs.tmpAllFiles = globs.tmp + allFiles;
+globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.dist + indexHtmlFile];
 
 const nl = '\r\n',
 	tab = '	';
@@ -197,9 +198,8 @@ function copy() {
 }
 
 function buildTemplates() {
-	return gulp.src([globs.dist + getGlob('html'), '!' + globs.dist + indexHtmlFile])
-		.pipe($.cleanDest(globs.dist))
-		.pipe(minifyHtml())
+	return gulp.src(globs.distTmpls)
+		.pipe(gulpHtmlmin())
 		.pipe($.angularTemplatecache(jsTemplatesFile, { module: 'app', transformUrl: function (url) { return url.slice(1); } }))
 		.pipe(gulp.dest(globs.dist));
 }
@@ -224,9 +224,10 @@ buildIndexDist.displayName = 'build-index:dist';
 
 function removeFiles() {
 	return gulp.src([
+		...globs.distTmpls,
 		globs.dist + jsFiles, '!' + globs.dist + scriptsJsFile,
 		globs.dist + getGlob('css'), '!' + globs.dist + stylesCssFile
-	])
+	], { read: false })
 		.pipe($.clean());
 }
 removeFiles.displayName = 'remove-files';
@@ -235,27 +236,37 @@ function clean() {
 	return deleteEmpty(globs.dist);
 }
 
+let minifyHtml = getMinifyTask('html', stream => stream.pipe(gulpHtmlmin()));
+minifyHtml.displayName = 'minify-html';
+
+let minifyCss = getMinifyTask('css', stream => stream.pipe($.cssnano({ zindex: false })));
+minifyCss.displayName = 'minify-css';
+
+let minifyJs = getMinifyTask('js', stream => stream.pipe($.ngAnnotate()).pipe($.terser()));
+minifyJs.displayName = 'minify-js';
+
+let minifyImg = getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()));
+minifyImg.displayName = 'minify-img';
+
+let minifyJson = getMinifyTask('json', stream => stream.pipe($.jsonmin()));
+minifyJson.displayName = 'minify-json';
+
+const minify = gulp.parallel(minifyHtml, minifyCss, minifyJs, minifyImg, minifyJson);
+
 function finishBuild() {
-	const indexHtmlFilter = filter('html'),
-		cssFilter = filter('css'),
-		jsFilter = filter('js'),
-		cssAndJsFilter = filter(['css', 'js']),
-		imgFilter = filter(['png', 'jpg', 'gif', 'svg']),
-		jsonFilter = filter('json');
+	const cssAndJsFilter = filter(['css', 'js']);
 	return gulp.src(globs.dist + allFiles)
-		.pipe(indexHtmlFilter).pipe(minifyHtml()).pipe(indexHtmlFilter.restore)
-		.pipe(cssFilter).pipe($.cssnano({ zindex: false })).pipe(cssFilter.restore)
-		.pipe(jsFilter).pipe($.ngAnnotate()).pipe($.terser()).pipe(jsFilter.restore)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
 		.pipe($.revReplace())
-		.pipe(imgFilter).pipe($.imagemin()).pipe(imgFilter.restore)
-		.pipe(jsonFilter).pipe($.jsonmin()).pipe(jsonFilter.restore)
 		.pipe($.size({ showFiles: true }))
 		.pipe(gulp.dest(globs.dist));
 }
 finishBuild.displayName = 'finish-build';
 
-gulp.task('build', gulp.series(buildTmp, removeDist, copy, buildTemplates, buildIndexDist, removeFiles, clean, finishBuild));
+gulp.task('build', gulp.series(
+	gulp.parallel(buildTmp, removeDist),
+	copy, buildTemplates, buildIndexDist, removeFiles, clean, minify, finishBuild
+));
 
 function browserDist(cb) {
 	browserSyncInit(globs.dist);
@@ -287,6 +298,11 @@ function browserSyncInit(path) {
 	browserSync.init({ server: path });
 }
 
-function minifyHtml() {
+function gulpHtmlmin() {
 	return $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true });
+}
+
+function getMinifyTask(ext, getProcessedStream) {
+	return () => getProcessedStream(gulp.src(globs.dist + getGlob(ext)))
+		.pipe(gulp.dest(globs.dist));
 }
