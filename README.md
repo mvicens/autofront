@@ -1,6 +1,6 @@
 # Autofront
 
-Automatisation of front-end by [Gulp](https://gulpjs.com) and [Bower](https://bower.io).
+Automation of front-end by [Gulp](https://gulpjs.com) and [Bower](https://bower.io).
 
 ## Get started
 
@@ -18,7 +18,7 @@ require('autofront');
 
 [Install it](https://bower.io/#install-bower), [initialize it and save dependencies](https://bower.io/#save-packages).
 
-### Install
+### Installation
 
 ```sh
 npm install --save-dev autofront
@@ -36,7 +36,7 @@ Finally initiate your project development:
 gulp
 ```
 
-A browser tab will be opened. Then, try editing the HTML to view the web refresh.
+A browser tab will be opened. Then, try editing the source code to view a web refresh.
 
 Other command options, that appear immediately below, are available. And to use another programming languages, see [the proper section](#support).
 
@@ -86,7 +86,7 @@ Collocated in `styles` directory, type over lonely `index.css`.
 
 The same as before (but with its own file extension). The rest of optional files will be ignored if they are not [imported](https://lesscss.org/features/#import-atrules-feature).
 
-#### [Sass](https://sass-lang.com)
+#### [Sass (SCSS)](https://sass-lang.com)
 
 Idem, but it is also obligatory an extra jointly: `_variables.scss`.
 

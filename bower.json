@@ -1,6 +1,6 @@
 {
   "name": "autofront",
-  "description": "Automatisation of front-end by Gulp and Bower.",
+  "description": "Automation of front-end by Gulp and Bower.",
   "main": "index.js",
   "authors": [
     "Miquel Alejandro Vicens Dalmau"
