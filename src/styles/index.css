@@ -1,3 +1,4 @@
-.img-fluid {
-	animation: blur 5s ease-in-out infinite;
+.list-group-item > form > span {
+	font-family: Pristina, serif;
+	font-size: 1.5em;
 }

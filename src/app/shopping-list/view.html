@@ -4,7 +4,7 @@
 		<header>
 			<h2 class="display-3 mb-3">Shopping list</h2>
 		</header>
-		<ul class="list-group" ng-show="vm.list.length">
+		<ul class="list-group" ng-if="vm.list.length">
 			<li class="list-group-item list-group-item-action" ng-repeat="item in vm.list track by $index">
 				<form ng-submit="vm.acceptEdition($index)" class="d-flex justify-content-between align-items-center">
 					<span ng-hide="item.isEditing">{{item.name}}</span>
@@ -22,7 +22,7 @@
 				</form>
 			</li>
 		</ul>
-		<div class="alert alert-info" role="alert" ng-hide="vm.list.length">Empty</div>
+		<div class="alert alert-info" role="alert" ng-if="!vm.list.length">Empty</div>
 		<form ng-submit="vm.add()" class="input-group">
 			<input type="text" class="form-control" placeholder="New item" ng-model="vm.newItem">
 			<button type="submit" class="btn btn-outline-secondary" title="Add"><span

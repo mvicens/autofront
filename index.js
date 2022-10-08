@@ -4,7 +4,6 @@ autofront.domains = {};
 
 const gulp = require('gulp'),
 	args = require('get-gulp-args')(),
-	mergeStream = require('merge-stream'),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
@@ -74,8 +73,7 @@ function buildIndex() {
 			`<!-- build:css ${stylesDir + filename}.css -->`,
 			'<!-- bower:css --><!-- endbower -->',
 			'<!-- endbuild -->',
-			`<link rel="stylesheet" href="${stylesCssFile}">`,
-			endCssComment
+			`<link rel="stylesheet" href="${stylesCssFile}">`
 		],
 		bodyStrs = [
 			jsComment,
@@ -85,6 +83,9 @@ function buildIndex() {
 			'<!-- inject:js -->',
 			'<!-- endinject -->'
 		];
+	for (let ext of ['less', 'scss'])
+		headStrs.push(`<link rel="stylesheet" href="${stylesDir + indexFilename}.${ext}.css">`);
+	headStrs.push(endCssComment);
 	if (autofront.html5Mode) {
 		headStrs.unshift('<base href="/">');
 		bodyStrs.push(`<script src="${html5ModeJsFile}"></script>`);
@@ -124,23 +125,19 @@ function addJs(cb) {
 }
 addJs.displayName = 'add-js';
 
-function styles() {
-	return mergeStream(getStream('css'), getStream('less', $.less), getStream('scss', gulpSass, '@import "variables";'))
-		.pipe($.concat(cssFile))
-		.pipe(gulp.dest(globs.tmp + stylesDir))
-		.pipe(browserSync.stream());
-
-	function getStream(ext, process, extraCode) {
-		let stream = gulp.src(globs.src + stylesDir + indexFilename + '.' + ext, { allowEmpty: true });
-		const sep = nl + nl;
-		if (process)
-			return stream
-				.pipe(injStr.prepend(sep + (extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
-				.pipe($.wiredep())
-				.pipe(process()).on('error', notifyError);
-		return stream;
-	}
+function css() {
+	return getCssTask('css');
 }
+
+function less() {
+	return getCssTask('less', $.less);
+}
+
+function sass() {
+	return getCssTask('scss', gulpSass, '@import "variables";');
+}
+
+const styles = gulp.parallel(css, less, sass);
 
 function fonts() {
 	return gulp.src(mainBowerFiles())
@@ -179,7 +176,7 @@ function watch() {
 			.pipe($.clean());
 		deleteEmpty(globs.tmp);
 	});
-	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + stylesCssFile], function (cb) {
+	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + getGlob('css')], function (cb) {
 		browserSync.reload();
 		cb();
 	});
@@ -288,6 +285,20 @@ function getGlob(ext = '*') {
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
+}
+
+function getCssTask(ext, process, extraCode) {
+	let stream = gulp.src(globs.src + stylesDir + indexFilename + '.' + ext, { allowEmpty: true });
+	const sep = nl + nl;
+	if (process)
+		stream = stream
+			.pipe(injStr.prepend((extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
+			.pipe($.wiredep())
+			.pipe(process()).on('error', notifyError)
+			.pipe($.rename({ suffix: '.' + ext }));
+	return stream
+		.pipe(gulp.dest(globs.tmp + stylesDir))
+		.pipe(browserSync.stream());
 }
 
 function filter(ext, isUnrestored) {
