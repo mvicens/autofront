@@ -42,7 +42,8 @@ globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
 globs.srcStyles = [globs.src + stylesCssFile, globs.src + getGlob('less'), globs.src + getGlob('scss')];
 globs.srcOthers = [globs.src + allFiles, ...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob)];
 globs.tmpAllFiles = globs.tmp + allFiles;
-globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.dist + indexHtmlFile];
+globs.distIndexHtmlFile = globs.dist + indexHtmlFile;
+globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndexHtmlFile];
 
 const nl = '\r\n',
 	tab = '	';
@@ -118,7 +119,14 @@ function addJs(cb) {
 	if (autofront.html5Mode)
 		return $.addFiles([{
 			name: html5ModeJsFile,
-			content: '(function () {' + nl + tab + "angular.module('app')" + nl + tab + tab + '.config(config);' + nl + nl + tab + 'function config($locationProvider) {' + nl + tab + tab + '$locationProvider.html5Mode(true);' + nl + tab + '}' + nl + '})();'
+			content: `(function () {
+	angular.module('app')
+		.config(config);
+
+	function config($locationProvider) {
+		$locationProvider.html5Mode(true);
+	}
+})();`
 		}])
 			.pipe(gulp.dest(globs.tmp));
 	cb();
@@ -203,13 +211,13 @@ function buildTemplates() {
 buildTemplates.displayName = 'build-templates';
 
 function buildIndexDist() {
-	const replaces = [
-		[cssComment, `<!-- build:css ${stylesCssFile} -->`],
-		[endCssComment, '<!-- endbuild -->'],
-		[jsComment, `<!-- build:js ${scriptsJsFile} -->`],
-		[endJsComment, '<!-- endbuild -->']
-	];
-	var stream = gulp.src(globs.dist + indexHtmlFile)
+	const replaces = Object.entries({
+		[cssComment]: `<!-- build:css ${stylesCssFile} -->`,
+		[endCssComment]: '<!-- endbuild -->',
+		[jsComment]: `<!-- build:js ${scriptsJsFile} -->`,
+		[endJsComment]: '<!-- endbuild -->'
+	});
+	var stream = gulp.src(globs.distIndexHtmlFile)
 		.pipe(injStr.before(endJsComment, `<script src="${jsTemplatesFile}"></script>` + nl + tab));
 	for (let [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
@@ -222,8 +230,8 @@ buildIndexDist.displayName = 'build-index:dist';
 function removeFiles() {
 	return gulp.src([
 		...globs.distTmpls,
-		globs.dist + jsFiles, '!' + globs.dist + scriptsJsFile,
-		globs.dist + getGlob('css'), '!' + globs.dist + stylesCssFile
+		globs.dist + getGlob('css'), '!' + globs.dist + stylesCssFile,
+		globs.dist + jsFiles, '!' + globs.dist + scriptsJsFile
 	], { read: false })
 		.pipe($.clean());
 }
