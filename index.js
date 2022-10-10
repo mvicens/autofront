@@ -69,40 +69,36 @@ manageDomain.displayName = 'manage-domain';
 
 function buildIndex() {
 	const filename = 'vendor',
-		headStrs = [
+		strs = [
 			cssComment,
 			`<!-- build:css ${stylesDir + filename}.css -->`,
 			'<!-- bower:css --><!-- endbower -->',
 			'<!-- endbuild -->',
 			`<link rel="stylesheet" href="${stylesCssFile}">`
-		],
-		bodyStrs = [
-			jsComment,
-			`<!-- build:js ${scriptsDir + filename}.js -->`,
-			'<!-- bower:js --><!-- endbower -->',
-			'<!-- endbuild -->',
-			'<!-- inject:js -->',
-			'<!-- endinject -->'
 		];
 	for (let ext of ['less', 'scss'])
-		headStrs.push(`<link rel="stylesheet" href="${stylesDir + indexFilename}.${ext}.css">`);
-	headStrs.push(endCssComment);
+		strs.push(`<link rel="stylesheet" href="${stylesDir + indexFilename}.${ext}.css">`);
+	strs.push(
+		endCssComment,
+		jsComment,
+		`<!-- build:js ${scriptsDir + filename}.js defer -->`,
+		'<!-- bower:js --><!-- endbower -->',
+		'<!-- endbuild -->',
+		'<!-- inject:js -->',
+		'<!-- endinject -->'
+	);
 	if (autofront.html5Mode) {
-		headStrs.unshift('<base href="/">');
-		bodyStrs.push(`<script src="${html5ModeJsFile}"></script>`);
+		strs.unshift('<base href="/">');
+		strs.push(getScriptTag(html5ModeJsFile));
 	}
+	strs.push(endJsComment);
 	return gulp.src(globs.srcIndexHtml)
-		.pipe(injStrBefore('head', headStrs))
-		.pipe(injStrBefore('body', [...bodyStrs, endJsComment]))
-		.pipe($.inject(gulp.src(globs.srcJs).pipe($.angularFilesort()), { relative: true })).on('error', notifyError)
+		.pipe(injStr.before('</head>', tab + strs.join(nl + tab) + nl))
+		.pipe($.inject(gulp.src(globs.srcJs).pipe($.angularFilesort()), { relative: true, transform: filepath => getScriptTag(filepath) })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
 		.pipe(gulp.src(globs.srcJs))
 		.pipe(gulp.dest(globs.tmp));
-
-	function injStrBefore(tagName, strs) {
-		return injStr.before(`</${tagName}>`, tab + strs.join(nl + tab) + nl);
-	}
 }
 buildIndex.displayName = 'build-index';
 
@@ -214,11 +210,11 @@ function buildIndexDist() {
 	const replaces = Object.entries({
 		[cssComment]: `<!-- build:css ${stylesCssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
-		[jsComment]: `<!-- build:js ${scriptsJsFile} -->`,
+		[jsComment]: `<!-- build:js ${scriptsJsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
 	var stream = gulp.src(globs.distIndexHtmlFile)
-		.pipe(injStr.before(endJsComment, `<script src="${jsTemplatesFile}"></script>` + nl + tab));
+		.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (let [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
 	return stream
@@ -293,6 +289,10 @@ function getGlob(ext = '*') {
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
+}
+
+function getScriptTag(src) {
+	return `<script src="${src}" defer></script>`;
 }
 
 function getCssTask(ext, process, extraCode) {
