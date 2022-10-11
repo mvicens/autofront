@@ -195,6 +195,7 @@ removeDist.displayName = 'remove:dist';
 
 function copy() {
 	return gulp.src(globs.tmpAllFiles)
+		.pipe($.size())
 		.pipe(gulp.dest(globs.dist));
 }
 
