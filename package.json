@@ -30,7 +30,7 @@
   "homepage": "https://github.com/mvicens/autofront#readme",
   "dependencies": {
     "browser-sync": "^2.27.10",
-    "delete-empty": "^3.0.0",
+    "delete-empty": "^2.0.0",
     "get-gulp-args": "^0.0.1",
     "gulp": "^4.0.2",
     "gulp-about": "^1.1.0",
