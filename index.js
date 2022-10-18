@@ -119,7 +119,7 @@ buildIndex.displayName = 'build-index';
 
 function injectDomain() {
 	return gulp.src(globs.tmp + jsFiles)
-		.pipe(injStr.replace('\\${AUTOFRONT_DOMAIN}', domain))
+		.pipe(replace('${AUTOFRONT_DOMAIN}', domain))
 		.pipe(gulp.dest(globs.tmp));
 }
 injectDomain.displayName = 'inject-domain';
@@ -230,7 +230,7 @@ function buildIndexDist() {
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
-	var stream = gulp.src(globs.distIndexHtmlFile)
+	let stream = gulp.src(globs.distIndexHtmlFile)
 		.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (let [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
@@ -242,13 +242,13 @@ buildIndexDist.displayName = 'build-index:dist';
 
 function fixUrls() {
 	const replaces = [
-		['\\.\\/', './styles/'],
-		['\\.\\.\\/', '']
-	];
+		['./', './' + stylesDir],
+		['../', '']
+	], str = 'url(';
 	let stream = gulp.src(globs.dist + cssFile);
-	for (let [search, str] of replaces)
+	for (let [search, str2] of replaces)
 		for (let char of ['', "'", '"'])
-			stream = stream.pipe(injStr.replace('url\\(\\s*' + char + search, 'url(' + char + str));
+			stream = stream.pipe(replace(str + '\\s*' + char + search, str + char + str2));
 	return stream
 		.pipe(gulp.dest(globs.dist));
 }
@@ -324,6 +324,12 @@ function delDir(glob) {
 
 function getScriptTag(src) {
 	return `<script src="${src}" defer></script>`;
+}
+
+function replace(search, str) {
+	for (let char of ['$', '.', '/', '('])
+		search = search.replaceAll(char, '\\' + char);
+	return injStr.replace(search, str);
 }
 
 function getCssTask(ext, process, extraCode) {
