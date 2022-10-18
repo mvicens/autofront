@@ -30,7 +30,7 @@ const allFiles = getGlob(),
 	html5ModeJsFile = scriptsDir + 'html5-mode.js',
 	endJsComment = '<!-- endautofrontjs -->',
 	jsTemplatesFile = scriptsDir + 'templates.js',
-	scriptsJsFile = scriptsDir + indexFilename + '.js';
+	jsFile = indexFilename + '.js';
 
 const globs = {
 	src: 'src/',
@@ -225,9 +225,9 @@ buildTemplates.displayName = 'build-templates';
 
 function buildIndexDist() {
 	const replaces = Object.entries({
-		[cssComment]: `<!-- build:css ${stylesCssFile} -->`,
+		[cssComment]: `<!-- build:css ${cssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
-		[jsComment]: `<!-- build:js ${scriptsJsFile} defer -->`,
+		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
 	var stream = gulp.src(globs.distIndexHtmlFile)
@@ -240,11 +240,25 @@ function buildIndexDist() {
 }
 buildIndexDist.displayName = 'build-index:dist';
 
+function fixUrls() {
+	const replaces = [
+		['\\.\\/', './styles/'],
+		['\\.\\.\\/', '']
+	];
+	let stream = gulp.src(globs.dist + cssFile);
+	for (let [search, str] of replaces)
+		for (let char of ['', "'", '"'])
+			stream = stream.pipe(injStr.replace('url\\(\\s*' + char + search, 'url(' + char + str));
+	return stream
+		.pipe(gulp.dest(globs.dist));
+}
+fixUrls.displayName = 'fix-urls';
+
 function removeFiles() {
 	return gulp.src([
 		...globs.distTmpls,
-		globs.dist + getGlob('css'), '!' + globs.dist + stylesCssFile,
-		globs.dist + jsFiles, '!' + globs.dist + scriptsJsFile
+		globs.dist + getGlob('css'), '!' + globs.dist + cssFile,
+		globs.dist + jsFiles, '!' + globs.dist + jsFile
 	], { read: false })
 		.pipe($.clean());
 }
@@ -283,7 +297,7 @@ finishBuild.displayName = 'finish-build';
 
 gulp.task('build', gulp.series(
 	gulp.parallel(buildTmp, removeDist),
-	copy, buildTemplates, buildIndexDist, removeFiles, clean, minify, finishBuild
+	copy, buildTemplates, buildIndexDist, fixUrls, removeFiles, clean, minify, finishBuild
 ));
 
 function browserDist(cb) {

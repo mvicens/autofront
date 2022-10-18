@@ -82,6 +82,8 @@ Turn any hypertext file into Pug's one, except the mentioned untouchable index p
 
 Collocated in `styles` directory, type over lonely `index.css`.
 
+URLs from the current directory must to start with `./`.
+
 #### [Less](https://lesscss.org)
 
 The same as before (but with its own file extension). The rest of optional files will be ignored if they are not [imported](https://lesscss.org/features/#import-atrules-feature).
