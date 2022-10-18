@@ -3,6 +3,7 @@ autofront.html5Mode = false;
 autofront.domains = {};
 
 const gulp = require('gulp'),
+	hidefile = require('hidefile'),
 	args = require('get-gulp-args')(),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
@@ -57,6 +58,20 @@ setDefault.displayName = 'set-default';
 function remove() {
 	return delDir(globs.tmp);
 }
+
+function createFolder() {
+	return gulp.src('*.*', { read: false })
+		.pipe(gulp.dest(globs.tmp));
+}
+createFolder.displayName = 'create-folder';
+
+function hideFolder(cb) {
+	hidefile.hideSync(globs.tmp, error => notifyError(error));
+	cb();
+}
+hideFolder.displayName = 'hide-folder';
+
+const create = gulp.series(createFolder, hideFolder);
 
 function manageDomain() {
 	const name = args.domain || args.d || defDomain;
@@ -164,6 +179,7 @@ function about() {
 
 const buildTmp = gulp.series(
 	gulp.parallel(remove, manageDomain),
+	create,
 	gulp.parallel(indexAndJs, addJs, styles, fonts, others, about)
 );
 
