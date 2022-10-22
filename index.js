@@ -1,6 +1,20 @@
-let autofront = this;
-autofront.html5Mode = false;
-autofront.domains = {};
+const defSettings = {
+	css: {
+		folder: 'styles/',
+		filename: 'index'
+	},
+	js: {
+		angularjs: {
+			module: 'app',
+			html5Mode: false,
+			template: true
+		},
+		domains: {}
+	}
+};
+let settings = this;
+for (let name in defSettings)
+	settings[name] = { ...defSettings[name] };
 
 const gulp = require('gulp'),
 	hidefile = require('hidefile'),
@@ -19,10 +33,6 @@ let defDomain = 'production',
 const allFiles = getGlob(),
 	indexHtmlFile = 'index.html',
 	jsFiles = getGlob('js'),
-	stylesDir = 'styles/',
-	indexFilename = 'index',
-	cssFile = indexFilename + '.css',
-	stylesCssFile = stylesDir + cssFile,
 	scriptsDir = 'scripts/',
 	cssComment = '<!-- autofrontcss -->',
 	endCssComment = '<!-- endautofrontcss -->',
@@ -30,7 +40,11 @@ const allFiles = getGlob(),
 	html5ModeJsFile = scriptsDir + 'html5-mode.js',
 	endJsComment = '<!-- endautofrontjs -->',
 	jsTemplatesFile = scriptsDir + 'templates.js',
-	jsFile = indexFilename + '.js';
+	jsFile = 'index.js',
+	cssFile = 'index.css';
+let stylesDir = undefined,
+	stylesFilename = undefined,
+	stylesCssFile = undefined;
 
 const globs = {
 	src: 'src/',
@@ -40,14 +54,24 @@ const globs = {
 globs.srcIndexHtml = globs.src + indexHtmlFile;
 globs.srcJs = globs.src + jsFiles;
 globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
-globs.srcStyles = [globs.src + stylesCssFile, globs.src + getGlob('less'), globs.src + getGlob('scss')];
-globs.srcOthers = [globs.src + allFiles, ...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob)];
+globs.srcStyles = [globs.src + getGlob('less'), globs.src + getGlob('scss')];
+globs.srcOthers = [globs.src + allFiles];
 globs.tmpAllFiles = globs.tmp + allFiles;
 globs.distIndexHtmlFile = globs.dist + indexHtmlFile;
 globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndexHtmlFile];
 
 const nl = '\r\n',
 	tab = '	';
+
+function setVariables(cb) {
+	stylesDir = getSetting('folder');
+	stylesFilename = getSetting('filename');
+	stylesCssFile = stylesDir + stylesFilename + '.css';
+	globs.srcStyles.unshift(globs.src + stylesCssFile);
+	globs.srcOthers.push(...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob));
+	cb();
+}
+setVariables.displayName = 'set-variables';
 
 function setDefault(cb) {
 	defDomain = 'development';
@@ -75,7 +99,7 @@ const create = gulp.series(createFolder, hideFolder);
 
 function manageDomain() {
 	const name = args.domain || args.d || defDomain;
-	domain = autofront.domains?.[name];
+	domain = getSetting('domains')[name];
 	const isMatched = domain !== undefined;
 	return gulp.src(globs.src, { read: false })
 		.pipe($.notify(isMatched ? `Matching domain: "${name}".` : 'No domain matched.'));
@@ -92,7 +116,7 @@ function buildIndex() {
 			`<link rel="stylesheet" href="${stylesCssFile}">`
 		];
 	for (let ext of ['less', 'scss'])
-		strs.push(`<link rel="stylesheet" href="${stylesDir + indexFilename}.${ext}.css">`);
+		strs.push(`<link rel="stylesheet" href="${stylesDir + stylesFilename}.${ext}.css">`);
 	strs.push(
 		endCssComment,
 		jsComment,
@@ -102,14 +126,17 @@ function buildIndex() {
 		'<!-- inject:js -->',
 		'<!-- endinject -->'
 	);
-	if (autofront.html5Mode) {
+	if (getSetting('html5Mode')) {
 		strs.unshift('<base href="/">');
 		strs.push(getScriptTag(html5ModeJsFile));
 	}
 	strs.push(endJsComment);
+	let stream = gulp.src(globs.srcJs);
+	if (getSetting('angularjs'))
+		stream = stream.pipe($.angularFilesort());
 	return gulp.src(globs.srcIndexHtml)
 		.pipe(injStr.before('</head>', tab + strs.join(nl + tab) + nl))
-		.pipe($.inject(gulp.src(globs.srcJs).pipe($.angularFilesort()), { relative: true, transform: filepath => getScriptTag(filepath) })).on('error', notifyError)
+		.pipe($.inject(stream, { relative: true, transform: filepath => getScriptTag(filepath) })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
 		.pipe(gulp.src(globs.srcJs))
@@ -127,11 +154,11 @@ injectDomain.displayName = 'inject-domain';
 const indexAndJs = gulp.series(buildIndex, injectDomain);
 
 function addJs(cb) {
-	if (autofront.html5Mode)
+	if (getSetting('html5Mode'))
 		return $.addFiles([{
 			name: html5ModeJsFile,
 			content: `(function () {
-	angular.module('app')
+	angular.module('${getSetting('module')}')
 		.config(config);
 
 	function config($locationProvider) {
@@ -202,7 +229,10 @@ function watch() {
 	});
 }
 
-gulp.task('serve', gulp.series(setDefault, buildTmp, browser, watch));
+gulp.task('serve', gulp.series(
+	gulp.parallel(setVariables, setDefault),
+	buildTmp, browser, watch
+));
 
 function removeDist() {
 	return delDir(globs.dist);
@@ -216,10 +246,11 @@ function copy() {
 }
 
 function buildTemplates() {
-	return gulp.src(globs.distTmpls)
-		.pipe(gulpHtmlmin())
-		.pipe($.angularTemplatecache(jsTemplatesFile, { module: 'app', transformUrl: function (url) { return url.slice(1); } }))
-		.pipe(gulp.dest(globs.dist));
+	let stream = gulp.src(globs.distTmpls)
+		.pipe(gulpHtmlmin());
+	if (getSetting('template'))
+		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: function (url) { return url.slice(1); } }));
+	return stream.pipe(gulp.dest(globs.dist));
 }
 buildTemplates.displayName = 'build-templates';
 
@@ -230,8 +261,9 @@ function buildIndexDist() {
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
-	let stream = gulp.src(globs.distIndexHtmlFile)
-		.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
+	let stream = gulp.src(globs.distIndexHtmlFile);
+	if (getSetting('template'))
+		stream = stream.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (let [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
 	return stream
@@ -256,7 +288,7 @@ fixUrls.displayName = 'fix-urls';
 
 function removeFiles() {
 	return gulp.src([
-		...globs.distTmpls,
+		...(getSetting('template') ? globs.distTmpls : []),
 		globs.dist + getGlob('css'), '!' + globs.dist + cssFile,
 		globs.dist + jsFiles, '!' + globs.dist + jsFile
 	], { read: false })
@@ -274,7 +306,11 @@ minifyHtml.displayName = 'minify-html';
 let minifyCss = getMinifyTask('css', stream => stream.pipe($.cssnano({ zindex: false })));
 minifyCss.displayName = 'minify-css';
 
-let minifyJs = getMinifyTask('js', stream => stream.pipe($.ngAnnotate()).pipe($.terser()));
+let minifyJs = getMinifyTask('js', stream => {
+	if (getSetting('angularjs'))
+		stream = stream.pipe($.ngAnnotate());
+	return stream.pipe($.terser());
+});
 minifyJs.displayName = 'minify-js';
 
 let minifyImg = getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()));
@@ -296,6 +332,7 @@ function finishBuild() {
 finishBuild.displayName = 'finish-build';
 
 gulp.task('build', gulp.series(
+	setVariables,
 	gulp.parallel(buildTmp, removeDist),
 	copy, buildTemplates, buildIndexDist, fixUrls, removeFiles, clean, minify, finishBuild
 ));
@@ -317,6 +354,35 @@ function getGlob(ext = '*') {
 	return glob + '{' + ext.join() + '}';
 }
 
+function getSetting(name) {
+	switch (name) {
+		case 'folder':
+			return getValue('css');
+		case 'filename':
+			return getValue('css');
+		case 'angularjs':
+			return getValue('js');
+		case 'module':
+		case 'html5Mode':
+		case 'template':
+			return getValue('js.angularjs');
+		case 'domains':
+			return getValue('js');
+	}
+
+	function getValue(str) {
+		const nameStr = str + '.' + name,
+			value = eval('settings.' + nameStr.replaceAll('.', '?.'));
+		if (str.includes('.')) {
+			str = str.split('.');
+			name = str.pop();
+			if (getValue(str.join('.')))
+				return value ?? eval('defSettings.' + nameStr);
+		}
+		return value;
+	}
+}
+
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
@@ -333,7 +399,7 @@ function replace(search, str) {
 }
 
 function getCssTask(ext, process, extraCode) {
-	let stream = gulp.src(globs.src + stylesDir + indexFilename + '.' + ext, { allowEmpty: true });
+	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext, { allowEmpty: true });
 	const sep = nl + nl;
 	if (process)
 		stream = stream
