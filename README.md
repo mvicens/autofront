@@ -83,11 +83,11 @@ Defining with:
 <tr><td colspan="2"><code>domains</code></td><td>Object</td><td>Domains list with names as keys and URLs as values.</td><td><code>{}</code></td></tr>
 </table>
 
-<p name="ref1">1. URLs from the current directory must to start with `./`. And CSS `@import`s are not permitted.</p>
+<p name="ref1">1. URLs from the current directory must to start with <code>./</code>. And CSS <code>@import</code>s are not permitted.</p>
 
-<p name="ref2">2. Mechanisms related to [AngularJS](https://angularjs.org) can be disabled assigning `false` (instead of the subproperties object).</p>
+<p name="ref2">2. Mechanisms related to <a href="https://angularjs.org">AngularJS</a> can be disabled assigning <code>false</code> (instead of the subproperties object).</p>
 
-<p name="ref3">3. Automatically, [`$locationProvider`](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode) will be used and a `<base>` injected.</p>
+<p name="ref3">3. Automatically, <a href="https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode"><code>$locationProvider</code></a> will be used and a <code>&lt;base&gt;</code> injected.</p>
 
 <p name="ref4">4. During the production building.</p>
 
