@@ -25,7 +25,8 @@ const gulp = require('gulp'),
 	gulpSass = $.sass(require('sass')),
 	notifyError = $.notify.onError(error => error.message),
 	browserSync = require('browser-sync').create(),
-	deleteEmpty = require('delete-empty');
+	deleteEmpty = require('delete-empty'),
+	cssnano = require('cssnano');
 
 let defDomain = 'production',
 	domain = undefined;
@@ -303,7 +304,7 @@ function clean() {
 let minifyHtml = getMinifyTask('html', stream => stream.pipe(gulpHtmlmin()));
 minifyHtml.displayName = 'minify-html';
 
-let minifyCss = getMinifyTask('css', stream => stream.pipe($.cssnano({ zindex: false })));
+let minifyCss = getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()])));
 minifyCss.displayName = 'minify-css';
 
 let minifyJs = getMinifyTask('js', stream => {
