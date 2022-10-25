@@ -13,7 +13,7 @@ const defSettings = {
 	}
 };
 let settings = this;
-for (let name in defSettings)
+for (const name in defSettings)
 	settings[name] = { ...defSettings[name] };
 
 const gulp = require('gulp'),
@@ -29,7 +29,7 @@ const gulp = require('gulp'),
 	cssnano = require('cssnano');
 
 let defDomain = 'production',
-	domain = undefined;
+	domain;
 
 const allFiles = getGlob(),
 	indexHtmlFile = 'index.html',
@@ -43,9 +43,9 @@ const allFiles = getGlob(),
 	jsTemplatesFile = scriptsDir + 'templates.js',
 	jsFile = 'index.js',
 	cssFile = 'index.css';
-let stylesDir = undefined,
-	stylesFilename = undefined,
-	stylesCssFile = undefined;
+let stylesDir,
+	stylesFilename,
+	stylesCssFile;
 
 const globs = {
 	src: 'src/',
@@ -68,8 +68,10 @@ function setVariables(cb) {
 	stylesDir = getSetting('folder');
 	stylesFilename = getSetting('filename');
 	stylesCssFile = stylesDir + stylesFilename + '.css';
+
 	globs.srcStyles.unshift(globs.src + stylesCssFile);
 	globs.srcOthers.push(...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob));
+
 	cb();
 }
 setVariables.displayName = 'set-variables';
@@ -116,7 +118,7 @@ function buildIndex() {
 			'<!-- endbuild -->',
 			`<link rel="stylesheet" href="${stylesCssFile}">`
 		];
-	for (let ext of ['less', 'scss'])
+	for (const ext of ['less', 'scss'])
 		strs.push(`<link rel="stylesheet" href="${stylesDir + stylesFilename}.${ext}.css">`);
 	strs.push(
 		endCssComment,
@@ -132,6 +134,7 @@ function buildIndex() {
 		strs.push(getScriptTag(html5ModeJsFile));
 	}
 	strs.push(endJsComment);
+
 	let stream = gulp.src(globs.srcJs);
 	if (getSetting('angularjs'))
 		stream = stream.pipe($.angularFilesort());
@@ -168,6 +171,7 @@ function addJs(cb) {
 })();`
 		}])
 			.pipe(gulp.dest(globs.tmp));
+
 	cb();
 }
 addJs.displayName = 'add-js';
@@ -265,7 +269,7 @@ function buildIndexDist() {
 	let stream = gulp.src(globs.distIndexHtmlFile);
 	if (getSetting('template'))
 		stream = stream.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
-	for (let [search, str] of replaces)
+	for (const [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
 	return stream
 		.pipe($.useref())
@@ -279,8 +283,8 @@ function fixUrls() {
 		['../', '']
 	], str = 'url(';
 	let stream = gulp.src(globs.dist + cssFile);
-	for (let [search, str2] of replaces)
-		for (let char of ['', "'", '"'])
+	for (const [search, str2] of replaces)
+		for (const char of ['', "'", '"'])
 			stream = stream.pipe(replace(str + '\\s*' + char + search, str + char + str2));
 	return stream
 		.pipe(gulp.dest(globs.dist));
@@ -394,7 +398,7 @@ function getScriptTag(src) {
 }
 
 function replace(search, str) {
-	for (let char of ['$', '.', '/', '('])
+	for (const char of ['$', '.', '/', '('])
 		search = search.replaceAll(char, '\\' + char);
 	return injStr.replace(search, str);
 }
