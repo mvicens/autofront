@@ -75,8 +75,10 @@ Defining with:
 
 <table>
 <tr><th colspan="3">(Sub)property</th><th>Type</th><th>Details</th><th>Default</th></tr>
-<tr><td rowspan="2"><code>css</code></td><td colspan="2"><code>folder</code></td><td>String</td><td>Directory that contains CSS files<a href="#ref1"><sup>[1]</sup></a>. Only one level allowed.</td><td><code>'styles/'</code></td></tr>
+<tr><td rowspan="4"><code>css</code></td><td colspan="2"><code>folder</code></td><td>String</td><td>Directory that contains CSS files<a href="#ref1"><sup>[1]</sup></a>. Only one level allowed.</td><td><code>'styles/'</code></td></tr>
 <tr><td colspan="2"><code>filename</code></td><td>String</td><td>Filename of root files.</td><td><code>'index'</code></td></tr>
+<tr><td rowspan="2"><code>fonts</code></td><td><code>folder</code></td><td>String</td><td>Location (folder path) of font files from Bower.</td><td><code>'fonts/'</code></td></tr>
+<tr><td><code>extensions</code></td><td>Array</td><td>File extensions to catch.</td><td><code>['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']</code></td></tr>
 <tr><td rowspan="4"><code>js</code></td><td rowspan="3"><code>angularjs</code><a href="#ref2"><sup>[2]</sup></a></td><td><code>module</code></td><td>String</td><td>Name of main module.</td><td><code>'app'</code></td></tr>
 <tr><td><code>html5Mode</code></td><td>Boolean</td><td><a href="https://docs.angularjs.org/guide/$location#html5-mode">HTML5 mode</a> enabled?<a href="#ref3"><sup>[3]</sup></a></td><td><code>false</code></td></tr>
 <tr><td><code>template</code></td><td>Boolean</td><td>Templates loaded by <a href="https://docs.angularjs.org/api/ng/service/$templateCache"><code>$templateCache</code></a>?<a href="#ref4"><sup>[4]</sup></a></td><td><code>true</code></td></tr>

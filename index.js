@@ -1,7 +1,11 @@
 const defSettings = {
 	css: {
 		folder: 'styles/',
-		filename: 'index'
+		filename: 'index',
+		fonts: {
+			folder: 'fonts/',
+			extensions: ['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']
+		}
 	},
 	js: {
 		angularjs: {
@@ -65,7 +69,7 @@ const nl = '\r\n',
 	tab = '	';
 
 function setVariables(cb) {
-	stylesDir = getSetting('folder');
+	stylesDir = getSetting('cssFolder');
 	stylesFilename = getSetting('filename');
 	stylesCssFile = stylesDir + stylesFilename + '.css';
 
@@ -192,8 +196,8 @@ const styles = gulp.parallel(css, less, sass);
 
 function fonts() {
 	return gulp.src(mainBowerFiles())
-		.pipe(filter(['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'], true))
-		.pipe(gulp.dest(globs.tmp + 'fonts/'));
+		.pipe(filter(getSetting('extensions'), true))
+		.pipe(gulp.dest(globs.tmp + getSetting('fontsFolder')));
 }
 
 function others() {
@@ -361,10 +365,15 @@ function getGlob(ext = '*') {
 
 function getSetting(name) {
 	switch (name) {
-		case 'folder':
+		case 'cssFolder':
+			name = 'folder';
 			return getValue('css');
 		case 'filename':
 			return getValue('css');
+		case 'fontsFolder':
+			name = 'folder';
+		case 'extensions':
+			return getValue('css.fonts');
 		case 'angularjs':
 			return getValue('js');
 		case 'module':
