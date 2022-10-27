@@ -367,7 +367,6 @@ function getSetting(name) {
 	switch (name) {
 		case 'cssFolder':
 			name = 'folder';
-			return getValue('css');
 		case 'filename':
 			return getValue('css');
 		case 'fontsFolder':
@@ -375,25 +374,23 @@ function getSetting(name) {
 		case 'extensions':
 			return getValue('css.fonts');
 		case 'angularjs':
-			return getValue('js');
+			return getValue('js', true);
 		case 'module':
 		case 'html5Mode':
 		case 'template':
-			return getValue('js.angularjs');
+			return getValue('js.angularjs', true, true);
 		case 'domains':
 			return getValue('js');
 	}
 
-	function getValue(str) {
+	function getValue(str, withoutDefault, onlyIfFalsy) {
 		const nameStr = str + '.' + name,
 			value = eval('settings.' + nameStr.replaceAll('.', '?.'));
-		if (str.includes('.')) {
-			str = str.split('.');
-			name = str.pop();
-			if (getValue(str.join('.')))
-				return value ?? eval('defSettings.' + nameStr);
+		if (withoutDefault) {
+			if (!onlyIfFalsy || !getSetting(str.split('.').pop()))
+				return value;
 		}
-		return value;
+		return value ?? eval('defSettings.' + nameStr);
 	}
 }
 
