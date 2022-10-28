@@ -46,13 +46,13 @@ Other command options, that appear immediately below, are available. And to use 
 
 The Gulp ones are the following:
 
-- `gulp` or `gulp serve` are for running a test server and develop with live reload.
-- `gulp build` only builds production code, the distributable application (`dist` folder).
-- With `gulp serve:dist`, a combination of the above is achieved: Specifically, the server runs that last version but without reload.
+- `gulp` (default) or `gulp serve` are for running a server and develop with live reload.
+- `gulp build` builds production code (folder `dist`).
+- Using `gulp serve:dist`, this distributable application is served but without reloading.
 
 ### Domains
 
-On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain production` or `gulp build -d development`) to indicate the domain of connection path. Defaults to "development" with tasks `serve` and `serve:dist`; and to "production" with `build`.
+On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain production` or `gulp build -d development`) to indicate the domain of connection path. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
 
 To define them, look at [the next section](#settings).
 
