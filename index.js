@@ -1,4 +1,5 @@
 const defSettings = {
+	html: { pug: false },
 	css: {
 		folder: 'styles/',
 		filename: 'index',
@@ -201,10 +202,12 @@ function fonts() {
 }
 
 function others() {
-	const pugFilter = filter('pug');
-	return gulp.src(globs.srcOthers)
-		.pipe(pugFilter).pipe($.pug()).on('error', notifyError).pipe(pugFilter.restore)
-		.pipe(gulp.dest(globs.tmp));
+	let stream = gulp.src(globs.srcOthers);
+	if (getSetting('pug')) {
+		const pugFilter = filter('pug');
+		stream = stream.pipe(pugFilter).pipe($.pug()).on('error', notifyError).pipe(pugFilter.restore);
+	}
+	return stream.pipe(gulp.dest(globs.tmp));
 }
 
 function about() {
@@ -228,7 +231,10 @@ function watch() {
 	gulp.watch(globs.srcIndexAndSrcJs, indexAndJs);
 	gulp.watch(globs.srcStyles, styles);
 	gulp.watch(globs.srcOthers, others).on('unlink', function (path) {
-		gulp.src(path.replaceAll('\\', '/').replace(globs.src, globs.tmp).replace('.pug', '.html'), { read: false })
+		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
+		if (getSetting('pug'))
+			path = path.replace('.pug', '.html');
+		gulp.src(path, { read: false })
 			.pipe($.clean());
 		deleteEmpty(globs.tmp);
 	});
@@ -365,6 +371,8 @@ function getGlob(ext = '*') {
 
 function getSetting(name) {
 	switch (name) {
+		case 'pug':
+			return getValue('html');
 		case 'cssFolder':
 			name = 'folder';
 		case 'filename':

@@ -75,6 +75,7 @@ Defining with:
 
 <table>
 <tr><th colspan="3">(Sub)property</th><th>Type</th><th>Details</th><th>Default</th></tr>
+<tr><td><code>html</code></td><td colspan="2"><code>pug</code></td><td>Boolean</td><td><a href="https://pugjs.org">Pug</a> activated?</td><td><code>false</code></td></tr>
 <tr><td rowspan="4"><code>css</code></td><td colspan="2"><code>folder</code></td><td>String</td><td>Directory that contains CSS files<a href="#ref1"><sup>[1]</sup></a>. Only one level allowed.</td><td><code>'styles/'</code></td></tr>
 <tr><td colspan="2"><code>filename</code></td><td>String</td><td>Filename of root files.</td><td><code>'index'</code></td></tr>
 <tr><td rowspan="2"><code>fonts</code></td><td><code>folder</code></td><td>String</td><td>Location (folder path) of font files from Bower.</td><td><code>'fonts/'</code></td></tr>
@@ -96,12 +97,6 @@ Defining with:
 ## Support
 
 Positioning in source folder (`src`), you can utilize:
-
-### HTML
-
-#### [Pug](https://pugjs.org)
-
-Turn any hypertext file into Pug's one, except the mentioned untouchable index page.
 
 ### CSS
 
