@@ -1,3 +1,27 @@
+.img-fluid {
+	animation: blur 5s ease-in-out infinite;
+}
+
+$blur: .5em;
+$scale: .9;
+
+@keyframes blur {
+	0% {
+		filter: blur(0);
+		transform: scale(1);
+	}
+
+	50% {
+		filter: blur($blur);
+		transform: scale($scale);
+	}
+
+	100% {
+		filter: blur(0);
+		transform: scale(1);
+	}
+}
+
 .list-group {
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;

@@ -3,6 +3,12 @@ const defSettings = {
 	css: {
 		folder: 'styles/',
 		filename: 'index',
+		order: 0,
+		less: { order: 1 },
+		scss: {
+			order: 2,
+			variables: true
+		},
 		fonts: {
 			folder: 'fonts/',
 			extensions: ['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']
@@ -50,7 +56,8 @@ const allFiles = getGlob(),
 	cssFile = 'index.css';
 let stylesDir,
 	stylesFilename,
-	stylesCssFile;
+	stylesCssFile,
+	cssExtensions = [];
 
 const globs = {
 	src: 'src/',
@@ -60,7 +67,7 @@ const globs = {
 globs.srcIndexHtml = globs.src + indexHtmlFile;
 globs.srcJs = globs.src + jsFiles;
 globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
-globs.srcStyles = [globs.src + getGlob('less'), globs.src + getGlob('scss')];
+globs.srcStyles = [];
 globs.srcOthers = [globs.src + allFiles];
 globs.tmpAllFiles = globs.tmp + allFiles;
 globs.distIndexHtmlFile = globs.dist + indexHtmlFile;
@@ -74,7 +81,20 @@ function setVariables(cb) {
 	stylesFilename = getSetting('filename');
 	stylesCssFile = stylesDir + stylesFilename + '.css';
 
-	globs.srcStyles.unshift(globs.src + stylesCssFile);
+	cssExtensions = [{
+		name: 'css',
+		order: getSetting('cssOrder')
+	}];
+	for (const name of ['less', 'scss'])
+		if (getSetting(name))
+			cssExtensions.push({
+				name,
+				order: getSetting(name + 'Order')
+			});
+	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order).map(obj => obj.name);
+
+	for (const ext of cssExtensions)
+		globs.srcStyles.push(globs.src + (ext == 'css' ? stylesCssFile : getGlob(ext)));
 	globs.srcOthers.push(...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob));
 
 	cb();
@@ -120,11 +140,10 @@ function buildIndex() {
 			cssComment,
 			`<!-- build:css ${stylesDir + filename}.css -->`,
 			'<!-- bower:css --><!-- endbower -->',
-			'<!-- endbuild -->',
-			`<link rel="stylesheet" href="${stylesCssFile}">`
+			'<!-- endbuild -->'
 		];
-	for (const ext of ['less', 'scss'])
-		strs.push(`<link rel="stylesheet" href="${stylesDir + stylesFilename}.${ext}.css">`);
+	for (const ext of cssExtensions)
+		strs.push('<link rel="stylesheet" href="' + (ext == 'css' ? stylesCssFile : stylesDir + stylesFilename + '.' + ext + '.css') + '">');
 	strs.push(
 		endCssComment,
 		jsComment,
@@ -185,12 +204,18 @@ function css() {
 	return getCssTask('css');
 }
 
-function less() {
-	return getCssTask('less', $.less);
+function less(cb) {
+	if (cssExtensions.includes('less'))
+		return getCssTask('less', $.less);
+
+	cb();
 }
 
-function sass() {
-	return getCssTask('scss', gulpSass, '@import "variables";');
+function sass(cb) {
+	if (cssExtensions.includes('scss'))
+		return getCssTask('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
+
+	cb();
 }
 
 const styles = gulp.parallel(css, less, sass);
@@ -377,6 +402,20 @@ function getSetting(name) {
 			name = 'folder';
 		case 'filename':
 			return getValue('css');
+		case 'cssOrder':
+			name = 'order';
+			return getValue('css');
+		case 'less':
+			return getValue('css', true);
+		case 'lessOrder':
+			name = 'order';
+			return getValue('css.less', true, true);
+		case 'scss':
+			return getValue('css', true);
+		case 'scssOrder':
+			name = 'order';
+		case 'variables':
+			return getValue('css.scss', true, true);
 		case 'fontsFolder':
 			name = 'folder';
 		case 'extensions':
@@ -418,7 +457,7 @@ function replace(search, str) {
 }
 
 function getCssTask(ext, process, extraCode) {
-	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext, { allowEmpty: true });
+	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext);
 	const sep = nl + nl;
 	if (process)
 		stream = stream
