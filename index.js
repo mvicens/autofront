@@ -399,25 +399,18 @@ function getSetting(name) {
 		case 'pug':
 			return getValue('html');
 		case 'cssFolder':
-			name = 'folder';
 		case 'filename':
-			return getValue('css');
 		case 'cssOrder':
-			name = 'order';
 			return getValue('css');
 		case 'less':
-			return getValue('css', true);
-		case 'lessOrder':
-			name = 'order';
-			return getValue('css.less', true, true);
 		case 'scss':
 			return getValue('css', true);
+		case 'lessOrder':
+			return getValue('css.less', true, true);
 		case 'scssOrder':
-			name = 'order';
 		case 'variables':
 			return getValue('css.scss', true, true);
 		case 'fontsFolder':
-			name = 'folder';
 		case 'extensions':
 			return getValue('css.fonts');
 		case 'angularjs':
@@ -431,6 +424,10 @@ function getSetting(name) {
 	}
 
 	function getValue(str, withoutDefault, onlyIfFalsy) {
+		for (const str of ['Folder', 'Order'])
+			if (name.endsWith(str))
+				name = str.toLowerCase();
+
 		const nameStr = str + '.' + name,
 			value = eval('settings.' + nameStr.replaceAll('.', '?.'));
 		if (withoutDefault) {
