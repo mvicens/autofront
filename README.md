@@ -50,13 +50,13 @@ The Gulp ones are the following:
 - `gulp build` builds production code (folder `dist`).
 - Using `gulp serve:dist`, this distributable application is served but without the refreshing.
 
-### Domains
+### Environments
 
-On executing Gulp command, a flag argument can be accepted (e.g.: `gulp --domain production` or `gulp build -d development`) to indicate the domain of connection path. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
+On executing Gulp command, flag argument `env` can be accepted to indicate the current environment variable. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
 
 To define them, look at [the next section](#settings).
 
-And, to capture the selected URL string, put `${AUTOFRONT_DOMAIN}` where it would be located in your JS source code.
+And, to inject it, put `${AUTOFRONT_ENV}` where it would be located in your JS source code.
 
 ## Settings
 
@@ -87,7 +87,7 @@ Defining with:
 | `js` | `angularjs`[^2] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
 | | | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled?[^3] | `false` |
 | | | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)?[^4] | `true` |
-| | `domains` | | Object | Domains list with names as keys and URLs as values. | `{}` |
+| | `envs` | | Object | Environment variables list with names as keys and content as values. | `{}` |
 
 [^1]: URLs from the current directory must to start with `./`. And CSS `@import`s are not permitted.
 [^2]: It can be disabled assigning a falsy value.

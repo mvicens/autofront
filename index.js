@@ -20,7 +20,7 @@ const defSettings = {
 			html5Mode: false,
 			template: true
 		},
-		domains: {}
+		envs: {}
 	}
 };
 let settings = this;
@@ -39,8 +39,9 @@ const gulp = require('gulp'),
 	deleteEmpty = require('delete-empty'),
 	cssnano = require('cssnano');
 
-let defDomain = 'production',
-	domain;
+let defEnv = 'production',
+	envName,
+	envValue;
 
 const allFiles = getGlob(),
 	indexHtmlFile = 'index.html',
@@ -102,7 +103,7 @@ function setVariables(cb) {
 setVariables.displayName = 'set-variables';
 
 function setDefault(cb) {
-	defDomain = 'development';
+	defEnv = 'development';
 	cb();
 }
 setDefault.displayName = 'set-default';
@@ -125,14 +126,14 @@ hideFolder.displayName = 'hide-folder';
 
 const create = gulp.series(createFolder, hideFolder);
 
-function manageDomain() {
-	const name = args.domain || args.d || defDomain;
-	domain = getSetting('domains')[name];
-	const isMatched = domain !== undefined;
+function manageEnv() {
+	envName = args.env || defEnv;
+	envValue = getSetting('envs')[envName];
+	const isMatched = envValue !== undefined;
 	return gulp.src(globs.src, { read: false })
-		.pipe($.notify(isMatched ? `Matching domain: "${name}".` : 'No domain matched.'));
+		.pipe($.notify(isMatched ? `Matching environment: "${envName}".` : 'No environment matched.'));
 }
-manageDomain.displayName = 'manage-domain';
+manageEnv.displayName = 'manage-env';
 
 function buildIndex() {
 	const filename = 'vendor',
@@ -172,14 +173,14 @@ function buildIndex() {
 }
 buildIndex.displayName = 'build-index';
 
-function injectDomain() {
+function injectEnv() {
 	return gulp.src(globs.tmp + jsFiles)
-		.pipe(replace('${AUTOFRONT_DOMAIN}', domain))
+		.pipe(replace('${AUTOFRONT_ENV}', envValue))
 		.pipe(gulp.dest(globs.tmp));
 }
-injectDomain.displayName = 'inject-domain';
+injectEnv.displayName = 'inject-env';
 
-const indexAndJs = gulp.series(buildIndex, injectDomain);
+const indexAndJs = gulp.series(buildIndex, injectEnv);
 
 function addJs(cb) {
 	if (getSetting('html5Mode'))
@@ -237,12 +238,12 @@ function others() {
 
 function about() {
 	return gulp.src('package.json')
-		.pipe($.about({ inject: { domain } }))
+		.pipe($.about({ inject: { environment: envName } }))
 		.pipe(gulp.dest(globs.tmp));
 }
 
 const buildTmp = gulp.series(
-	gulp.parallel(remove, manageDomain),
+	gulp.parallel(remove, manageEnv),
 	create,
 	gulp.parallel(indexAndJs, addJs, styles, fonts, others, about)
 );
@@ -419,7 +420,7 @@ function getSetting(name) {
 		case 'html5Mode':
 		case 'template':
 			return getValue('js.angularjs', true, true);
-		case 'domains':
+		case 'envs':
 			return getValue('js');
 	}
 

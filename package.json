@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "gulp",
-    "serve:dist": "gulp serve:dist -d=preproduction",
+    "serve:dist": "gulp serve:dist --env=preproduction",
     "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

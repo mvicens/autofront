@@ -4,7 +4,7 @@ autofront.css = {
 	scss: true,
 	fonts: { extensions: ['ttf', 'woff2'] }
 };
-autofront.js.domains = {
+autofront.js.envs = {
 	development: 'http://localhost:3001/',
 	preproduction: 'http://dev.mydomain/',
 	production: 'http://mydomain/'

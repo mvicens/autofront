@@ -3,6 +3,6 @@
 		.run(runBlock);
 
 	function runBlock() {
-		console.info('My domain is: ${AUTOFRONT_DOMAIN}');
+		console.info('My environment value is: ${AUTOFRONT_ENV}');
 	}
 })();
