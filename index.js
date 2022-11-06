@@ -44,7 +44,7 @@ let defEnv = 'production',
 	envValue;
 
 const allFiles = getGlob(),
-	indexHtmlFile = 'index.html',
+	indexFile = 'index.html',
 	jsFiles = getGlob('js'),
 	scriptsDir = 'scripts/',
 	cssComment = '<!-- autofrontcss -->',
@@ -65,17 +65,23 @@ const globs = {
 	tmp: '.tmp/',
 	dist: 'dist/'
 };
-globs.srcIndexHtml = globs.src + indexHtmlFile;
+globs.srcIndex = globs.src + indexFile;
 globs.srcJs = globs.src + jsFiles;
-globs.srcIndexAndSrcJs = [globs.srcIndexHtml, globs.srcJs];
+globs.srcIndexAndJs = [globs.srcIndex, globs.srcJs];
 globs.srcStyles = [];
 globs.srcOthers = [globs.src + allFiles];
 globs.tmpAllFiles = globs.tmp + allFiles;
-globs.distIndexHtmlFile = globs.dist + indexHtmlFile;
-globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndexHtmlFile];
+globs.distIndexFile = globs.dist + indexFile;
+globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndexFile];
 
 const nl = '\r\n',
 	tab = '	';
+
+function setDefaultEnv(cb) {
+	defEnv = 'development';
+	cb();
+}
+setDefaultEnv.displayName = 'set-default-env';
 
 function setVariables(cb) {
 	stylesDir = getSetting('cssFolder');
@@ -96,21 +102,25 @@ function setVariables(cb) {
 
 	for (const ext of cssExtensions)
 		globs.srcStyles.push(globs.src + (ext == 'css' ? stylesCssFile : getGlob(ext)));
-	globs.srcOthers.push(...[...globs.srcIndexAndSrcJs, ...globs.srcStyles].map(glob => '!' + glob));
+	globs.srcOthers.push(...[...globs.srcIndexAndJs, ...globs.srcStyles].map(glob => '!' + glob));
 
 	cb();
 }
 setVariables.displayName = 'set-variables';
 
-function setDefault(cb) {
-	defEnv = 'development';
-	cb();
+function getEnv() {
+	envName = args.env || defEnv;
+	envValue = getSetting('envs')[envName];
+	const isMatched = envValue !== undefined;
+	return gulp.src(globs.src, { read: false })
+		.pipe($.notify(isMatched ? `Matching environment: "${envName}".` : 'No environment matched.'));
 }
-setDefault.displayName = 'set-default';
+getEnv.displayName = 'get-env';
 
-function remove() {
+function removeFolder() {
 	return delDir(globs.tmp);
 }
+removeFolder.displayName = 'remove-folder';
 
 function createFolder() {
 	return gulp.src('*.*', { read: false })
@@ -124,18 +134,9 @@ function hideFolder(cb) {
 }
 hideFolder.displayName = 'hide-folder';
 
-const create = gulp.series(createFolder, hideFolder);
+const addFolder = gulp.series(createFolder, hideFolder);
 
-function manageEnv() {
-	envName = args.env || defEnv;
-	envValue = getSetting('envs')[envName];
-	const isMatched = envValue !== undefined;
-	return gulp.src(globs.src, { read: false })
-		.pipe($.notify(isMatched ? `Matching environment: "${envName}".` : 'No environment matched.'));
-}
-manageEnv.displayName = 'manage-env';
-
-function buildIndex() {
+function index() {
 	const filename = 'vendor',
 		strs = [
 			cssComment,
@@ -163,26 +164,44 @@ function buildIndex() {
 	let stream = gulp.src(globs.srcJs);
 	if (getSetting('angularjs'))
 		stream = stream.pipe($.angularFilesort());
-	return gulp.src(globs.srcIndexHtml)
+
+	return gulp.src(globs.srcIndex)
 		.pipe(injStr.before('</head>', tab + strs.join(nl + tab) + nl))
 		.pipe($.inject(stream, { relative: true, transform: filepath => getScriptTag(filepath) })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
-		.pipe(gulp.src(globs.srcJs))
 		.pipe(gulp.dest(globs.tmp));
 }
-buildIndex.displayName = 'build-index';
 
-function injectEnv() {
-	return gulp.src(globs.tmp + jsFiles)
+function js() {
+	return gulp.src(globs.srcJs)
 		.pipe(replace('${AUTOFRONT_ENV}', envValue))
 		.pipe(gulp.dest(globs.tmp));
 }
-injectEnv.displayName = 'inject-env';
 
-const indexAndJs = gulp.series(buildIndex, injectEnv);
+const indexAndJs = gulp.parallel(index, js);
 
-function addJs(cb) {
+function css() {
+	return getStylesStream('css');
+}
+
+function less(cb) {
+	if (cssExtensions.includes('less'))
+		return getStylesStream('less', $.less);
+
+	cb();
+}
+
+function scss(cb) {
+	if (cssExtensions.includes('scss'))
+		return getStylesStream('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
+
+	cb();
+}
+
+const styles = gulp.parallel(css, less, scss);
+
+function html5Mode(cb) {
 	if (getSetting('html5Mode'))
 		return $.addFiles([{
 			name: html5ModeJsFile,
@@ -199,27 +218,7 @@ function addJs(cb) {
 
 	cb();
 }
-addJs.displayName = 'add-js';
-
-function css() {
-	return getCssTask('css');
-}
-
-function less(cb) {
-	if (cssExtensions.includes('less'))
-		return getCssTask('less', $.less);
-
-	cb();
-}
-
-function sass(cb) {
-	if (cssExtensions.includes('scss'))
-		return getCssTask('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
-
-	cb();
-}
-
-const styles = gulp.parallel(css, less, sass);
+html5Mode.displayName = 'html5-mode';
 
 function fonts() {
 	return gulp.src(mainBowerFiles())
@@ -243,9 +242,9 @@ function about() {
 }
 
 const buildTmp = gulp.series(
-	gulp.parallel(remove, manageEnv),
-	create,
-	gulp.parallel(indexAndJs, addJs, styles, fonts, others, about)
+	gulp.parallel(getEnv, removeFolder),
+	addFolder,
+	gulp.parallel(indexAndJs, styles, html5Mode, fonts, others, about)
 );
 
 function browser(cb) {
@@ -254,7 +253,7 @@ function browser(cb) {
 }
 
 function watch() {
-	gulp.watch(globs.srcIndexAndSrcJs, indexAndJs);
+	gulp.watch(globs.srcIndexAndJs, indexAndJs);
 	gulp.watch(globs.srcStyles, styles);
 	gulp.watch(globs.srcOthers, others).on('unlink', function (path) {
 		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
@@ -271,14 +270,14 @@ function watch() {
 }
 
 gulp.task('serve', gulp.series(
-	gulp.parallel(setVariables, setDefault),
+	gulp.parallel(setDefaultEnv, setVariables),
 	buildTmp, browser, watch
 ));
 
-function removeDist() {
+function removeFolderDist() {
 	return delDir(globs.dist);
 }
-removeDist.displayName = 'remove:dist';
+removeFolderDist.displayName = 'remove-folder:dist';
 
 function copy() {
 	return gulp.src(globs.tmpAllFiles)
@@ -286,23 +285,22 @@ function copy() {
 		.pipe(gulp.dest(globs.dist));
 }
 
-function buildTemplates() {
+function templates() {
 	let stream = gulp.src(globs.distTmpls)
 		.pipe(gulpHtmlmin());
 	if (getSetting('template'))
 		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: function (url) { return url.slice(1); } }));
 	return stream.pipe(gulp.dest(globs.dist));
 }
-buildTemplates.displayName = 'build-templates';
 
-function buildIndexDist() {
+function indexDist() {
 	const replaces = Object.entries({
 		[cssComment]: `<!-- build:css ${cssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
-	let stream = gulp.src(globs.distIndexHtmlFile);
+	let stream = gulp.src(globs.distIndexFile);
 	if (getSetting('template'))
 		stream = stream.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (const [search, str] of replaces)
@@ -311,7 +309,7 @@ function buildIndexDist() {
 		.pipe($.useref())
 		.pipe(gulp.dest(globs.dist));
 }
-buildIndexDist.displayName = 'build-index:dist';
+indexDist.displayName = 'index:dist';
 
 function fixUrls() {
 	const replaces = [
@@ -327,7 +325,7 @@ function fixUrls() {
 }
 fixUrls.displayName = 'fix-urls';
 
-function removeFiles() {
+function cleanFiles() {
 	return gulp.src([
 		...(getSetting('template') ? globs.distTmpls : []),
 		globs.dist + getGlob('css'), '!' + globs.dist + cssFile,
@@ -335,29 +333,32 @@ function removeFiles() {
 	], { read: false })
 		.pipe($.clean());
 }
-removeFiles.displayName = 'remove-files';
+cleanFiles.displayName = 'clean-files';
 
-function clean() {
+function cleanFolders() {
 	return deleteEmpty(globs.dist);
 }
+cleanFolders.displayName = 'clean-folders';
 
-let minifyHtml = getMinifyTask('html', stream => stream.pipe(gulpHtmlmin()));
+const clean = gulp.series(cleanFiles, cleanFolders);
+
+const minifyHtml = getMinifyTask('html', stream => stream.pipe(gulpHtmlmin()));
 minifyHtml.displayName = 'minify-html';
 
-let minifyCss = getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()])));
+const minifyCss = getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()])));
 minifyCss.displayName = 'minify-css';
 
-let minifyJs = getMinifyTask('js', stream => {
+const minifyJs = getMinifyTask('js', stream => {
 	if (getSetting('angularjs'))
 		stream = stream.pipe($.ngAnnotate());
 	return stream.pipe($.terser());
 });
 minifyJs.displayName = 'minify-js';
 
-let minifyImg = getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()));
+const minifyImg = getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()));
 minifyImg.displayName = 'minify-img';
 
-let minifyJson = getMinifyTask('json', stream => stream.pipe($.jsonmin()));
+const minifyJson = getMinifyTask('json', stream => stream.pipe($.jsonmin()));
 minifyJson.displayName = 'minify-json';
 
 const minify = gulp.parallel(minifyHtml, minifyCss, minifyJs, minifyImg, minifyJson);
@@ -374,8 +375,8 @@ finishBuild.displayName = 'finish-build';
 
 gulp.task('build', gulp.series(
 	setVariables,
-	gulp.parallel(buildTmp, removeDist),
-	copy, buildTemplates, buildIndexDist, fixUrls, removeFiles, clean, minify, finishBuild
+	gulp.parallel(buildTmp, removeFolderDist),
+	copy, templates, indexDist, fixUrls, clean, minify, finishBuild
 ));
 
 function browserDist(cb) {
@@ -384,7 +385,7 @@ function browserDist(cb) {
 }
 browserDist.displayName = 'browser:dist';
 
-gulp.task('serve:dist', gulp.series(setDefault, 'build', browserDist));
+gulp.task('serve:dist', gulp.series(setDefaultEnv, 'build', browserDist));
 
 gulp.task('default', gulp.task('serve'));
 
@@ -454,7 +455,7 @@ function replace(search, str) {
 	return injStr.replace(search, str);
 }
 
-function getCssTask(ext, process, extraCode) {
+function getStylesStream(ext, process, extraCode) {
 	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext);
 	const sep = nl + nl;
 	if (process)
