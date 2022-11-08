@@ -6,8 +6,7 @@
   "scripts": {
     "serve": "gulp",
     "serve:dist": "gulp serve:dist --env=preproduction",
-    "build": "gulp build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",
@@ -18,7 +17,7 @@
     "pug",
     "css",
     "less",
-    "sass",
+    "scss",
     "javascript",
     "angularjs"
   ],
