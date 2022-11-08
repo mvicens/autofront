@@ -1,4 +1,5 @@
 let autofront = require('./index');
+
 autofront.html.pug = true;
 autofront.css = {
 	scss: true,
