@@ -26,7 +26,7 @@ npm install --save-dev autofront
 
 ### Main page
 
-In `src` directory, place your `index.html` without embedding tags (`<link>`s and `<script>`s).
+In directory `src`, place your `index.html` without embedding tags (`<link>`s and `<script>`s).
 
 ### Run
 
@@ -38,7 +38,7 @@ gulp
 
 A browser tab is opened. Now you are ready to develop!
 
-To reach further, see the following sections.
+To reach further, see below.
 
 ## Usage
 
@@ -56,7 +56,7 @@ On executing Gulp command, flag argument `env` can be accepted to indicate the c
 
 To define them, look at [the next section](#settings).
 
-And, to inject it, put `${AUTOFRONT_ENV}` where it would be located in your JS source code.
+And, to inject it, put `${AUTOFRONT_ENV}` in your JS source code where it would be located.
 
 ## Settings
 
@@ -67,9 +67,14 @@ let autofront = require('autofront');
 
 autofront.property = {
 	subproperty: value,
+	subproperty2: {
+		subproperty3: value2,
+		// ...
+	},
 	// ...
 };
-autofront.property2.subproperty2 = value2;
+autofront.property2.subproperty4 = value3;
+// ...
 ```
 
 Defining with:
