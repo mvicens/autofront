@@ -63,7 +63,7 @@ They can be used in this way:
 You can configure it typing into Gulp file in this way:
 
 ```js
-let autofront = require('autofront');
+const autofront = require('autofront');
 
 autofront.property = {
 	subproperty: value,

@@ -1,4 +1,4 @@
-let autofront = require('./index');
+const autofront = require('./index');
 
 autofront.html.pug = true;
 autofront.css = {

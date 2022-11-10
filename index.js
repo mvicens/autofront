@@ -23,7 +23,7 @@ const defSettings = {
 		envs: {}
 	}
 };
-let settings = this;
+const settings = this;
 for (const name in defSettings)
 	settings[name] = { ...defSettings[name] };
 
@@ -236,7 +236,7 @@ function others() {
 }
 
 function about() {
-	return gulp.src('package.json')
+	return gulp.src('package.json')//'bower.json'
 		.pipe($.about({ inject: { environment: envName } }))
 		.pipe(gulp.dest(globs.tmp));
 }
