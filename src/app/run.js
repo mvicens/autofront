@@ -3,6 +3,6 @@
 		.run(runBlock);
 
 	function runBlock() {
-		console.info('My environment value is: ${AUTOFRONT_ENV}');
+		console.info('My environment variable contains:', AUTOFRONT_ENV);
 	}
 })();

@@ -175,7 +175,7 @@ function index() {
 
 function js() {
 	return gulp.src(globs.srcJs)
-		.pipe(replace('${AUTOFRONT_ENV}', envValue))
+		.pipe(replace('AUTOFRONT_ENV', JSON.stringify(envValue, undefined, tab)))
 		.pipe(gulp.dest(globs.tmp));
 }
 

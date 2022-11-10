@@ -50,13 +50,13 @@ The Gulp ones are the following:
 - `gulp build` builds production code (folder `dist`).
 - Using `gulp serve:dist`, this distributable application is served but without the refreshing.
 
-### Environments
+### Environment variables
 
-On executing Gulp command, flag argument `env` can be accepted to indicate the current environment variable. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
+They can be used in this way:
 
-To define them, look at [the next section](#settings).
-
-And, to inject it, put `${AUTOFRONT_ENV}` in your JS source code where it would be located.
+1. Define them. Look at [the next section](#settings).
+2. Put `AUTOFRONT_ENV` in your JS source code where it would be injected.
+3. On executing Gulp command, indicate the name of the current one to the flag argument `env`. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
 
 ## Settings
 
@@ -93,7 +93,7 @@ Defining with:
 | `js` | `angularjs`[^2] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
 | | | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled?[^3] | `false` |
 | | | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)?[^4] | `true` |
-| | `envs` | | Object | Environment variables list with names as keys and content as values. | `{}` |
+| | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
 
 [^1]: URLs from the current directory must to start with `./`. And CSS `@import`s are not permitted.
 [^2]: It can be disabled assigning a falsy value.
