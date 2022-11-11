@@ -456,7 +456,7 @@ function replace(search, str) {
 }
 
 function getStylesStream(ext, process, extraCode) {
-	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext);
+	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext, { allowEmpty: true });
 	const sep = nl + nl;
 	if (process)
 		stream = stream
