@@ -44,11 +44,16 @@ To reach further, see below.
 
 ### Tasks
 
-The Gulp ones are the following:
+The Gulp ones are:
 
-- `gulp` (default) or `gulp serve` are for running a server and develop with live reload.
-- `gulp build` builds production code (folder `dist`).
-- Using `gulp serve:dist`, this distributable application is served but without the refreshing.
+| Name | Details | Processes |
+| --- | --- | --- |
+| `serve` (default) | Source code runs in a server with live reload. | <ul><li>Bower entry-point files catching.</li><li>Notification and injection of [env. variable](#environment-variables).</li><li>Compilation (Less, SCSS and Pug)[^1].</li><li>Set up[^2] of HTML5 mode.[^1]</li><li>Insertion of file with app info (`about.json`).</li></ul> |
+| `build` | Production code is built (in folder `dist`). | The above and: <ul><li>Templates caching.[^1]</li><li>Concatenation to one hashed file (CSS and JS).</li><li>Minification (HTML, CSS, JS, images and JSON).</li><li>Console display of files size.</li></ul> |
+| `serve:dist` | This distributable application is served but without the refreshing. | Idem. |
+
+[^1]: [If enabled](#settings).
+[^2]: Invocation of [`$locationProvider`](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode) and a `<base>` injected.
 
 ### Environment variables
 
@@ -56,7 +61,7 @@ They can be used in this way:
 
 1. Define them. Look at [the next section](#settings).
 2. Put `AUTOFRONT_ENV` in your JS source code where it would be injected.
-3. On executing Gulp command, indicate the name of the current one to the flag argument `env`. Defaults to "development" with server tasks (`serve` and `serve:dist`) and to "production" with `build`.
+3. On executing Gulp command, indicate the name of the current one to the flag argument `env`. Defaults to "development" with server tasks and to "production" with `build`.
 
 ## Settings
 
@@ -82,20 +87,18 @@ Defining with:
 | Property | Subprop. | | Type | Details | Default |
 | --- | --- | --- | --- | --- | --- |
 | `html` | `pug` | | Boolean | [Pug](https://pugjs.org) activated? | `false` |
-| `css` | `folder` | | String | Directory that contains CSS files[^1]. Only one level allowed. | `'styles/'` |
+| `css` | `folder` | | String | Directory that contains CSS files[^3]. Only one level allowed. | `'styles/'` |
 | | `filename` | | String | Filename of root files. | `'index'` |
 | | `order` | | Number | Index of order to include content in stylesheet. | `0` |
-| | `less`[^2] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
-| | `scss`[^2] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
+| | `less`[^4] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
+| | `scss`[^4] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
 | | | `variables` | Boolean | File of variables used? | `true` |
 | | `fonts` | `folder` | String | Location (folder path) of font files from Bower. | `'fonts/'` |
 | | | `extensions` | Array | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
-| `js` | `angularjs`[^2] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
-| | | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled?[^3] | `false` |
-| | | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)?[^4] | `true` |
+| `js` | `angularjs`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
+| | | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled? | `false` |
+| | | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)? | `true` |
 | | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
 
-[^1]: URLs from the current directory must to start with `./`. And CSS `@import`s are not permitted.
-[^2]: It can be disabled assigning a falsy value.
-[^3]: Automatically, [`$locationProvider`](https://docs.angularjs.org/api/ng/provider/$locationProvider#html5Mode) will be used and a `<base>` injected.
-[^4]: During the production building.
+[^3]: URLs from the current directory must to start with `./`. And CSS `@import`s are not permitted.
+[^4]: It can be disabled assigning a falsy value.
