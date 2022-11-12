@@ -15,7 +15,7 @@ const defSettings = {
 		}
 	},
 	js: {
-		angularjs: {
+		ng: {
 			module: 'app',
 			html5Mode: false,
 			template: true
@@ -162,7 +162,7 @@ function index() {
 	strs.push(endJsComment);
 
 	let stream = gulp.src(globs.srcJs);
-	if (getSetting('angularjs'))
+	if (getSetting('ng'))
 		stream = stream.pipe($.angularFilesort());
 
 	return gulp.src(globs.srcIndex)
@@ -349,7 +349,7 @@ const minifyCss = getMinifyTask('css', stream => stream.pipe($.postcss([cssnano(
 minifyCss.displayName = 'minify-css';
 
 const minifyJs = getMinifyTask('js', stream => {
-	if (getSetting('angularjs'))
+	if (getSetting('ng'))
 		stream = stream.pipe($.ngAnnotate());
 	return stream.pipe($.terser());
 });
@@ -415,12 +415,12 @@ function getSetting(name) {
 		case 'fontsFolder':
 		case 'extensions':
 			return getValue('css.fonts');
-		case 'angularjs':
+		case 'ng':
 			return getValue('js', true);
 		case 'module':
 		case 'html5Mode':
 		case 'template':
-			return getValue('js.angularjs', true, true);
+			return getValue('js.ng', true, true);
 		case 'envs':
 			return getValue('js');
 	}

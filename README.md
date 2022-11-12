@@ -95,7 +95,7 @@ Defining with:
 | <!-- 〃 --> | <!-- 〃 --> | `variables` | Boolean | File of variables used? | `true` |
 | <!-- 〃 --> | `fonts` | `folder` | String | Location (folder path) of font files from Bower. | `'fonts/'` |
 | <!-- 〃 --> | <!-- 〃 --> | `extensions` | Array | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
-| `js` | `angularjs`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
+| `js` | `ng`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
 | <!-- 〃 --> | <!-- 〃 --> | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled? | `false` |
 | <!-- 〃 --> | <!-- 〃 --> | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)? | `true` |
 | <!-- 〃 --> | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
