@@ -236,7 +236,7 @@ function others() {
 }
 
 function about() {
-	return gulp.src('package.json')//'bower.json'
+	return gulp.src('package.json')
 		.pipe($.about({ inject: { environment: envName } }))
 		.pipe(gulp.dest(globs.tmp));
 }
