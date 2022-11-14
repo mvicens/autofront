@@ -220,10 +220,14 @@ function html5Mode(cb) {
 }
 html5Mode.displayName = 'html5-mode';
 
-function fonts() {
-	return gulp.src(mainBowerFiles())
-		.pipe(filter(getSetting('extensions'), true))
-		.pipe(gulp.dest(globs.tmp + getSetting('fontsFolder')));
+function fonts(cb) {
+	const glob = mainBowerFiles();
+	if (glob.length)
+		return gulp.src(glob)
+			.pipe(filter(getSetting('extensions'), true))
+			.pipe(gulp.dest(globs.tmp + getSetting('fontsFolder')));
+
+	cb();
 }
 
 function others() {
