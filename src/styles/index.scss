@@ -1,6 +1,4 @@
-.img-fluid {
-	animation: blur 5s ease-in-out infinite;
-}
+@import "../app/shopping-list/index";
 
 $blur: .5em;
 $scale: .9;
@@ -19,17 +17,5 @@ $scale: .9;
 	100% {
 		filter: blur(0);
 		transform: scale(1);
-	}
-}
-
-.list-group {
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
-	+ .input-group {
-		.form-control,
-		.btn {
-			border-top-left-radius: 0;
-			border-top-right-radius: 0;
-		}
 	}
 }

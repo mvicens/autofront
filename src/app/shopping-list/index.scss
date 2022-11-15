@@ -1,0 +1,16 @@
+.list-group {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+	+ .input-group {
+		.form-control,
+		.btn {
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+		}
+	}
+
+	&-item > form > span {
+		font-family: Pristina, serif;
+		font-size: 1.5em;
+	}
+}
