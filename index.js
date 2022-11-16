@@ -28,7 +28,6 @@ for (const name in defSettings)
 	settings[name] = { ...defSettings[name] };
 
 const gulp = require('gulp'),
-	hidefile = require('hidefile'),
 	args = require('get-gulp-args')(),
 	mainBowerFiles = require('main-bower-files'),
 	$ = require('gulp-load-plugins')(),
@@ -37,7 +36,8 @@ const gulp = require('gulp'),
 	notifyError = $.notify.onError(error => error.message),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty'),
-	cssnano = require('cssnano');
+	cssnano = require('cssnano'),
+	hidefile = require('hidefile');
 
 let defEnv = 'production',
 	envName,
@@ -65,6 +65,7 @@ const globs = {
 	tmp: '.tmp/',
 	dist: 'dist/'
 };
+globs.hiddenDist = '.' + globs.dist;
 globs.srcIndex = globs.src + indexFile;
 globs.srcJs = globs.src + jsFiles;
 globs.srcIndexAndJs = [globs.srcIndex, globs.srcJs];
@@ -129,7 +130,7 @@ function createFolder() {
 createFolder.displayName = 'create-folder';
 
 function hideFolder(cb) {
-	hidefile.hideSync(globs.tmp, error => notifyError(error));
+	hideDir(globs.tmp);
 	cb();
 }
 hideFolder.displayName = 'hide-folder';
@@ -279,7 +280,7 @@ gulp.task('serve', gulp.series(
 ));
 
 function removeFolderDist() {
-	return delDir(globs.dist);
+	return delDir([globs.dist, globs.hiddenDist]);
 }
 removeFolderDist.displayName = 'remove-folder:dist';
 
@@ -383,13 +384,19 @@ gulp.task('build', gulp.series(
 	copy, templates, indexDist, fixUrls, clean, minify, finishBuild
 ));
 
+function hideFolderDist(cb) {
+	hideDir(globs.dist);
+	cb();
+}
+hideFolderDist.displayName = 'hide-folder:dist';
+
 function browserDist(cb) {
-	browserSyncInit(globs.dist);
+	browserSyncInit(globs.hiddenDist);
 	cb();
 }
 browserDist.displayName = 'browser:dist';
 
-gulp.task('serve:dist', gulp.series(setDefaultEnv, 'build', browserDist));
+gulp.task('serve:dist', gulp.series(setDefaultEnv, 'build', hideFolderDist, browserDist));
 
 gulp.task('default', gulp.task('serve'));
 
@@ -447,6 +454,10 @@ function getSetting(name) {
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
+}
+
+function hideDir(glob) {
+	hidefile.hideSync(glob, error => notifyError(error));
 }
 
 function getScriptTag(src) {
