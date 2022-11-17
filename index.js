@@ -37,7 +37,8 @@ const gulp = require('gulp'),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty'),
 	cssnano = require('cssnano'),
-	hidefile = require('hidefile');
+	hidefile = require('hidefile'),
+	fs = require('fs');
 
 let defEnv = 'production',
 	envName,
@@ -306,7 +307,7 @@ function indexDist() {
 		[endJsComment]: '<!-- endbuild -->'
 	});
 	let stream = gulp.src(globs.distIndexFile);
-	if (getSetting('template'))
+	if (getSetting('template') && fileExists(globs.dist + jsTemplatesFile))
 		stream = stream.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (const [search, str] of replaces)
 		stream = stream.pipe(injStr.replace(search, str));
@@ -471,17 +472,31 @@ function replace(search, str) {
 }
 
 function getStylesStream(ext, process, extraCode) {
-	let stream = gulp.src(globs.src + stylesDir + stylesFilename + '.' + ext, { allowEmpty: true });
-	const sep = nl + nl;
-	if (process)
+	const stylesFile = stylesFilename + '.' + ext,
+		srcStylesFile = globs.src + stylesDir + stylesFile;
+
+	if (!fileExists(srcStylesFile))
+		return finishStream($.addFiles([{
+			name: stylesFile + (process ? '.css' : ''),
+			content: ''
+		}]));
+
+	let stream = gulp.src(srcStylesFile);
+	if (process) {
+		const sep = nl + nl;
 		stream = stream
 			.pipe(injStr.prepend((extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
 			.pipe($.wiredep())
 			.pipe(process()).on('error', notifyError)
 			.pipe($.rename({ suffix: '.' + ext }));
-	return stream
-		.pipe(gulp.dest(globs.tmp + stylesDir))
-		.pipe(browserSync.stream());
+	}
+	return finishStream(stream);
+
+	function finishStream(stream) {
+		return stream
+			.pipe(gulp.dest(globs.tmp + stylesDir))
+			.pipe(browserSync.stream());
+	}
 }
 
 function filter(ext, isUnrestored) {
@@ -490,6 +505,10 @@ function filter(ext, isUnrestored) {
 
 function browserSyncInit(path) {
 	browserSync.init({ server: path });
+}
+
+function fileExists(path) {
+	return fs.existsSync(path);
 }
 
 function gulpHtmlmin() {
