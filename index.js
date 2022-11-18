@@ -70,7 +70,6 @@ globs.hiddenDist = '.' + globs.dist;
 globs.srcIndex = globs.src + indexFile;
 globs.srcJs = globs.src + jsFiles;
 globs.srcIndexAndJs = [globs.srcIndex, globs.srcJs];
-globs.srcStyles = [];
 globs.srcOthers = [globs.src + allFiles];
 globs.tmpAllFiles = globs.tmp + allFiles;
 globs.distIndexFile = globs.dist + indexFile;
@@ -100,11 +99,16 @@ function setVariables(cb) {
 				name,
 				order: getSetting(name + 'Order')
 			});
-	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order).map(obj => obj.name);
+	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order);
 
-	for (const ext of cssExtensions)
-		globs.srcStyles.push(globs.src + (ext == 'css' ? stylesCssFile : getGlob(ext)));
-	globs.srcOthers.push(...[...globs.srcIndexAndJs, ...globs.srcStyles].map(glob => '!' + glob));
+	const srcStyles = [];
+	for (const cssExt of cssExtensions) {
+		const name = cssExt.name,
+			glob = globs.src + (name == 'css' ? stylesCssFile : getGlob(name));
+		srcStyles.push(glob);
+		cssExt.glob = glob;
+	}
+	globs.srcOthers.push(...[...globs.srcIndexAndJs, ...srcStyles].map(glob => '!' + glob));
 
 	cb();
 }
@@ -114,7 +118,7 @@ function getEnv() {
 	envName = args.env || defEnv;
 	envValue = getSetting('envs')[envName];
 	const isMatched = envValue !== undefined;
-	return gulp.src(globs.src, { read: false })
+	return gulpSrcAux()
 		.pipe($.notify(isMatched ? `Matching environment: "${envName}".` : 'No environment matched.'));
 }
 getEnv.displayName = 'get-env';
@@ -146,8 +150,8 @@ function index() {
 			'<!-- bower:css --><!-- endbower -->',
 			'<!-- endbuild -->'
 		];
-	for (const ext of cssExtensions)
-		strs.push('<link rel="stylesheet" href="' + (ext == 'css' ? stylesCssFile : stylesDir + stylesFilename + '.' + ext + '.css') + '">');
+	for (const { name } of cssExtensions)
+		strs.push('<link rel="stylesheet" href="' + (name == 'css' ? stylesCssFile : stylesDir + stylesFilename + '.' + name + '.css') + '">');
 	strs.push(
 		endCssComment,
 		jsComment,
@@ -187,18 +191,12 @@ function css() {
 	return getStylesStream('css');
 }
 
-function less(cb) {
-	if (cssExtensions.includes('less'))
-		return getStylesStream('less', $.less);
-
-	cb();
+function less() {
+	return getStylesStream('less', $.less);
 }
 
-function scss(cb) {
-	if (cssExtensions.includes('scss'))
-		return getStylesStream('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
-
-	cb();
+function scss() {
+	return getStylesStream('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
 }
 
 const styles = gulp.parallel(css, less, scss);
@@ -260,7 +258,8 @@ function browser(cb) {
 
 function watch() {
 	gulp.watch(globs.srcIndexAndJs, indexAndJs);
-	gulp.watch(globs.srcStyles, styles);
+	for (cssExt of cssExtensions)
+		gulp.watch(cssExt.glob, eval(cssExt.name));
 	gulp.watch(globs.srcOthers, others).on('unlink', function (path) {
 		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
 		if (getSetting('pug'))
@@ -452,6 +451,10 @@ function getSetting(name) {
 	}
 }
 
+function gulpSrcAux() {
+	return gulp.src(globs.src, { read: false });
+}
+
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
@@ -472,6 +475,9 @@ function replace(search, str) {
 }
 
 function getStylesStream(ext, process, extraCode) {
+	if (process && !cssExtensions.find(({ name }) => name == ext))
+		return gulpSrcAux();
+
 	const stylesFile = stylesFilename + '.' + ext,
 		srcStylesFile = globs.src + stylesDir + stylesFile;
 
