@@ -256,21 +256,24 @@ function browser(cb) {
 	cb();
 }
 
+function reload(cb) {
+	browserSync.reload();
+	cb();
+}
+
 function watch() {
 	gulp.watch(globs.srcIndexAndJs, indexAndJs);
 	for (cssExt of cssExtensions)
 		gulp.watch(cssExt.glob, eval(cssExt.name));
-	gulp.watch(globs.srcOthers, others).on('unlink', function (path) {
+	gulp.watch(globs.srcOthers, others).on('unlink', path => {
 		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
 		if (getSetting('pug'))
 			path = path.replace('.pug', '.html');
 		gulp.src(path, { read: false })
 			.pipe($.clean());
-		deleteEmpty(globs.tmp);
 	});
-	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + getGlob('css')], function (cb) {
-		browserSync.reload();
-		cb();
+	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + getGlob('css')], reload).on('unlink', () => {
+		deleteEmpty(globs.tmp);
 	});
 }
 
