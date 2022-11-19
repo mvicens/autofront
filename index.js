@@ -27,13 +27,13 @@ const settings = this;
 for (const name in defSettings)
 	settings[name] = { ...defSettings[name] };
 
-const gulp = require('gulp'),
-	args = require('get-gulp-args')(),
-	mainBowerFiles = require('main-bower-files'),
+const args = require('get-gulp-args')(),
+	gulp = require('gulp'),
 	$ = require('gulp-load-plugins')(),
 	injStr = $.injectString,
-	gulpSass = $.sass(require('sass')),
 	notifyError = $.notify.onError(error => error.message),
+	gulpSass = $.sass(require('sass')),
+	mainBowerFiles = require('main-bower-files'),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty'),
 	cssnano = require('cssnano'),
@@ -46,16 +46,16 @@ let defEnv = 'production',
 
 const allFiles = getGlob(),
 	indexFile = 'index.html',
-	jsFiles = getGlob('js'),
 	scriptsDir = 'scripts/',
+	jsFiles = getGlob('js'),
 	cssComment = '<!-- autofrontcss -->',
 	endCssComment = '<!-- endautofrontcss -->',
 	jsComment = '<!-- autofrontjs -->',
 	html5ModeJsFile = scriptsDir + 'html5-mode.js',
-	endJsComment = '<!-- endautofrontjs -->',
 	jsTemplatesFile = scriptsDir + 'templates.js',
-	jsFile = 'index.js',
-	cssFile = 'index.css';
+	endJsComment = '<!-- endautofrontjs -->',
+	cssFile = 'index.css',
+	jsFile = 'index.js';
 let stylesDir,
 	stylesFilename,
 	stylesCssFile,
@@ -297,7 +297,7 @@ function templates() {
 	let stream = gulp.src(globs.distTmpls)
 		.pipe(gulpHtmlmin());
 	if (getSetting('template'))
-		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: function (url) { return url.slice(1); } }));
+		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: (url) => url.slice(1) }));
 	return stream.pipe(gulp.dest(globs.dist));
 }
 
@@ -516,12 +516,12 @@ function browserSyncInit(path) {
 	browserSync.init({ server: path });
 }
 
-function fileExists(path) {
-	return fs.existsSync(path);
-}
-
 function gulpHtmlmin() {
 	return $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true });
+}
+
+function fileExists(path) {
+	return fs.existsSync(path);
 }
 
 function getMinifyTask(ext, getProcessedStream) {
