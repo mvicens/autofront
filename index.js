@@ -221,10 +221,9 @@ function html5Mode(cb) {
 html5Mode.displayName = 'html5-mode';
 
 function fonts(cb) {
-	const glob = mainBowerFiles();
+	const glob = mainBowerFiles(getGlob(getSetting('extensions')));
 	if (glob.length)
 		return gulp.src(glob)
-			.pipe(filter(getSetting('extensions'), true))
 			.pipe(gulp.dest(globs.tmp + getSetting('fontsFolder')));
 
 	cb();
@@ -407,7 +406,7 @@ function getGlob(ext = '*') {
 	const glob = '**/*.';
 	if (typeof ext == 'string')
 		return glob + ext;
-	return glob + '{' + ext.join() + '}';
+	return glob + '{' + ext.join() + ',}';
 }
 
 function getSetting(name) {
@@ -508,8 +507,8 @@ function getStylesStream(ext, process, extraCode) {
 	}
 }
 
-function filter(ext, isUnrestored) {
-	return $.filter(getGlob(ext), { restore: !isUnrestored });
+function filter(ext) {
+	return $.filter(getGlob(ext), { restore: true });
 }
 
 function browserSyncInit(path) {
