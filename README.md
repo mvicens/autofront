@@ -92,9 +92,9 @@ Defining with:
 | <!-- 〃 --> | `order` | | Number | Index of order to include content in stylesheet. | `0` |
 | <!-- 〃 --> | `less`[^4] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
 | <!-- 〃 --> | `scss`[^4] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
-| <!-- 〃 --> | <!-- 〃 --> | `variables` | Boolean | File of variables used? | `true` |
+| <!-- 〃 --> | <!-- 〃 --> | `variables` | Boolean | File of variables (`_variables.scss`) used? | `true` |
 | <!-- 〃 --> | `fonts` | `folder` | String | Location (folder path) of font files from Bower. | `'fonts/'` |
-| <!-- 〃 --> | <!-- 〃 --> | `extensions` | Array | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
+| <!-- 〃 --> | <!-- 〃 --> | `extensions` | String or array of strings | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
 | `js` | `ng`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
 | <!-- 〃 --> | <!-- 〃 --> | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled? | `false` |
 | <!-- 〃 --> | <!-- 〃 --> | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)? | `true` |
