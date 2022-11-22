@@ -118,7 +118,7 @@ function getEnv() {
 	envName = args.env || defEnv;
 	envValue = getSetting('envs')[envName];
 	const isMatched = envValue !== undefined;
-	return gulpSrcAux()
+	return gulp.src(globs.src, { read: false })
 		.pipe($.notify(isMatched ? `Matching environment: "${envName}".` : 'No environment matched.'));
 }
 getEnv.displayName = 'get-env';
@@ -187,17 +187,11 @@ function js() {
 
 const indexAndJs = gulp.parallel(index, js);
 
-function css() {
-	return getStylesStream('css');
-}
+const css = getStylesTask('css');
 
-function less() {
-	return getStylesStream('less', $.less);
-}
+const less = getStylesTask('less', $.less);
 
-function scss() {
-	return getStylesStream('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
-}
+const scss = getStylesTask('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
 
 const styles = gulp.parallel(css, less, scss);
 
@@ -453,10 +447,6 @@ function getSetting(name) {
 	}
 }
 
-function gulpSrcAux() {
-	return gulp.src(globs.src, { read: false });
-}
-
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
@@ -476,29 +466,32 @@ function replace(search, str) {
 	return injStr.replace(search, str);
 }
 
-function getStylesStream(ext, process, extraCode) {
-	if (process && !cssExtensions.find(({ name }) => name == ext))
-		return gulpSrcAux();
+function getStylesTask(ext, process, extraCode) {
+	return (cb) => {
+		if (!process || cssExtensions.find(({ name }) => name == ext)) {
+			const stylesFile = stylesFilename + '.' + ext,
+				srcStylesFile = globs.src + stylesDir + stylesFile;
 
-	const stylesFile = stylesFilename + '.' + ext,
-		srcStylesFile = globs.src + stylesDir + stylesFile;
+			if (!fileExists(srcStylesFile))
+				return finishStream($.addFiles([{
+					name: stylesFile + (process ? '.css' : ''),
+					content: ''
+				}]));
 
-	if (!fileExists(srcStylesFile))
-		return finishStream($.addFiles([{
-			name: stylesFile + (process ? '.css' : ''),
-			content: ''
-		}]));
+			let stream = gulp.src(srcStylesFile);
+			if (process) {
+				const sep = nl + nl;
+				stream = stream
+					.pipe(injStr.prepend((extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
+					.pipe($.wiredep())
+					.pipe(process()).on('error', notifyError)
+					.pipe($.rename({ suffix: '.' + ext }));
+			}
+			return finishStream(stream);
+		}
 
-	let stream = gulp.src(srcStylesFile);
-	if (process) {
-		const sep = nl + nl;
-		stream = stream
-			.pipe(injStr.prepend((extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
-			.pipe($.wiredep())
-			.pipe(process()).on('error', notifyError)
-			.pipe($.rename({ suffix: '.' + ext }));
-	}
-	return finishStream(stream);
+		cb();
+	};
 
 	function finishStream(stream) {
 		return stream
