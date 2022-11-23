@@ -470,34 +470,30 @@ function getStylesTask(ext, process, extraCode) {
 	return (cb) => {
 		if (!process || cssExtensions.find(({ name }) => name == ext)) {
 			const stylesFile = stylesFilename + '.' + ext,
-				srcStylesFile = globs.src + stylesDir + stylesFile;
-
+				srcStylesFile = globs.src + stylesDir + stylesFile,
+				sep = nl + nl,
+				content = (extraCode ? extraCode + sep : '') + (process ? '// bower:' + ext + nl + '// endbower' : '');
+			let stream;
 			if (!fileExists(srcStylesFile))
-				return finishStream($.addFiles([{
-					name: stylesFile + (process ? '.css' : ''),
-					content: ''
-				}]));
-
-			let stream = gulp.src(srcStylesFile);
-			if (process) {
-				const sep = nl + nl;
+				stream = $.addFiles([{
+					name: stylesFile,
+					content
+				}]);
+			else
+				stream = gulp.src(srcStylesFile)
+					.pipe(injStr.prepend(content ? content + sep : ''));
+			if (process)
 				stream = stream
-					.pipe(injStr.prepend((extraCode ? extraCode + sep : '') + '// bower:' + ext + nl + '// endbower' + sep))
 					.pipe($.wiredep())
 					.pipe(process()).on('error', notifyError)
 					.pipe($.rename({ suffix: '.' + ext }));
-			}
-			return finishStream(stream);
+			return stream
+				.pipe(gulp.dest(globs.tmp + stylesDir))
+				.pipe(browserSync.stream());
 		}
 
 		cb();
 	};
-
-	function finishStream(stream) {
-		return stream
-			.pipe(gulp.dest(globs.tmp + stylesDir))
-			.pipe(browserSync.stream());
-	}
 }
 
 function filter(ext) {
