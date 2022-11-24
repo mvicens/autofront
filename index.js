@@ -89,16 +89,27 @@ function setVariables(cb) {
 	stylesFilename = getSetting('filename');
 	stylesCssFile = stylesDir + stylesFilename + '.css';
 
-	cssExtensions = [{
-		name: 'css',
-		order: getSetting('cssOrder')
-	}];
-	for (const name of ['less', 'scss'])
-		if (getSetting(name))
-			cssExtensions.push({
-				name,
-				order: getSetting(name + 'Order')
-			});
+	for (const cssExt of [
+		{
+			name: 'css'
+		},
+		{
+			name: 'less',
+			process: $.less
+		},
+		{
+			name: 'scss',
+			process: gulpSass,
+			getExtraCode: getSetting('variables') ? () => {
+				const file = globs.src + stylesDir + '_variables.scss';
+				return fileExists(file) ? `@import "${file}";` : '';
+			} : undefined
+		}
+	]) {
+		const name = cssExt.name;
+		if (!cssExt.process || getSetting(name))
+			cssExtensions.push({ getExtraCode: () => '', ...cssExt, order: getSetting(name + 'Order') });
+	}
 	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order);
 
 	const srcStyles = [];
@@ -189,9 +200,9 @@ const indexAndJs = gulp.parallel(index, js);
 
 const css = getStylesTask('css');
 
-const less = getStylesTask('less', $.less);
+const less = getStylesTask('less');
 
-const scss = getStylesTask('scss', gulpSass, getSetting('variables') ? '@import "variables";' : '');
+const scss = getStylesTask('scss');
 
 const styles = gulp.parallel(css, less, scss);
 
@@ -447,6 +458,10 @@ function getSetting(name) {
 	}
 }
 
+function fileExists(path) {
+	return fs.existsSync(path);
+}
+
 function delDir(glob) {
 	return gulp.src(glob, { allowEmpty: true, read: false })
 		.pipe($.clean());
@@ -466,11 +481,14 @@ function replace(search, str) {
 	return injStr.replace(search, str);
 }
 
-function getStylesTask(ext, process, extraCode) {
+function getStylesTask(ext) {
 	return (cb) => {
-		if (!process || cssExtensions.find(({ name }) => name == ext)) {
+		const cssExt = cssExtensions.find(({ name }) => name == ext);
+		if (cssExt) {
 			const stylesFile = stylesFilename + '.' + ext,
 				srcStylesFile = globs.src + stylesDir + stylesFile,
+				process = cssExt.process,
+				extraCode = cssExt.getExtraCode(),
 				sep = nl + nl,
 				content = (extraCode ? extraCode + sep : '') + (process ? '// bower:' + ext + nl + '// endbower' : '');
 			let stream;
@@ -506,10 +524,6 @@ function browserSyncInit(path) {
 
 function gulpHtmlmin() {
 	return $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true });
-}
-
-function fileExists(path) {
-	return fs.existsSync(path);
 }
 
 function getMinifyTask(ext, getProcessedStream) {
