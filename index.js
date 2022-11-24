@@ -301,7 +301,7 @@ function templates() {
 	let stream = gulp.src(globs.distTmpls)
 		.pipe(gulpHtmlmin());
 	if (getSetting('template'))
-		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: (url) => url.slice(1) }));
+		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: url => url.slice(1) }));
 	return stream.pipe(gulp.dest(globs.dist));
 }
 
@@ -354,26 +354,17 @@ cleanFolders.displayName = 'clean-folders';
 
 const clean = gulp.series(cleanFiles, cleanFolders);
 
-const minifyHtml = getMinifyTask('html', stream => stream.pipe(gulpHtmlmin()));
-minifyHtml.displayName = 'minify-html';
-
-const minifyCss = getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()])));
-minifyCss.displayName = 'minify-css';
-
-const minifyJs = getMinifyTask('js', stream => {
-	if (getSetting('ng'))
-		stream = stream.pipe($.ngAnnotate());
-	return stream.pipe($.terser());
-});
-minifyJs.displayName = 'minify-js';
-
-const minifyImg = getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()));
-minifyImg.displayName = 'minify-img';
-
-const minifyJson = getMinifyTask('json', stream => stream.pipe($.jsonmin()));
-minifyJson.displayName = 'minify-json';
-
-const minify = gulp.parallel(minifyHtml, minifyCss, minifyJs, minifyImg, minifyJson);
+const minify = gulp.parallel(
+	getMinifyTask('html', stream => stream.pipe(gulpHtmlmin())),
+	getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()]))),
+	getMinifyTask('js', stream => {
+		if (getSetting('ng'))
+			stream = stream.pipe($.ngAnnotate());
+		return stream.pipe($.terser());
+	}),
+	getMinifyTask(['png', 'jpg', 'gif', 'svg'], stream => stream.pipe($.imagemin()), 'img'),
+	getMinifyTask('json', stream => stream.pipe($.jsonmin()))
+);
 
 function finishBuild() {
 	const cssAndJsFilter = filter(['css', 'js']);
@@ -482,7 +473,7 @@ function replace(search, str) {
 }
 
 function getStylesTask(ext) {
-	return (cb) => {
+	const fn = cb => {
 		const cssExt = cssExtensions.find(({ name }) => name == ext);
 		if (cssExt) {
 			const stylesFile = stylesFilename + '.' + ext,
@@ -512,6 +503,8 @@ function getStylesTask(ext) {
 
 		cb();
 	};
+	fn.displayName = ext;
+	return fn;
 }
 
 function filter(ext) {
@@ -526,7 +519,9 @@ function gulpHtmlmin() {
 	return $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true });
 }
 
-function getMinifyTask(ext, getProcessedStream) {
-	return () => getProcessedStream(gulp.src(globs.dist + getGlob(ext)))
+function getMinifyTask(ext, getProcessedStream, str) {
+	const fn = () => getProcessedStream(gulp.src(globs.dist + getGlob(ext)))
 		.pipe(gulp.dest(globs.dist));
+	fn.displayName = 'minify-' + (str || ext);
+	return fn;
 }
