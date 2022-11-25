@@ -38,6 +38,7 @@
     "gulp-angular-filesort": "^1.2.1",
     "gulp-angular-templatecache": "^3.0.1",
     "gulp-clean": "^0.4.0",
+    "gulp-cssimport": "^7.0.0",
     "gulp-filter": "^7.0.0",
     "gulp-htmlmin": "^5.0.1",
     "gulp-imagemin": "^7.1.0",

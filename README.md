@@ -100,5 +100,5 @@ Defining with:
 | <!-- 〃 --> | <!-- 〃 --> | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)? | `true` |
 | <!-- 〃 --> | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
 
-[^3]: URLs from the current directory must to start with `./`. And CSS `@import`s are not supported.
+[^3]: URLs from the current directory must to start with `./`.
 [^4]: It can be disabled assigning a falsy value.

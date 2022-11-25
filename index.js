@@ -91,11 +91,13 @@ function setVariables(cb) {
 
 	for (const cssExt of [
 		{
-			name: 'css'
+			name: 'css',
+			process: $.cssimport
 		},
 		{
 			name: 'less',
-			process: $.less
+			process: $.less,
+			isPreprocessor: true
 		},
 		{
 			name: 'scss',
@@ -103,19 +105,19 @@ function setVariables(cb) {
 			getExtraCode: getSetting('variables') ? () => {
 				const file = globs.src + stylesDir + '_variables.scss';
 				return fileExists(file) ? `@import "${file}";` : '';
-			} : undefined
+			} : undefined,
+			isPreprocessor: true
 		}
 	]) {
 		const name = cssExt.name;
-		if (!cssExt.process || getSetting(name))
+		if (!cssExt.isPreprocessor || getSetting(name))
 			cssExtensions.push({ getExtraCode: () => '', ...cssExt, order: getSetting(name + 'Order') });
 	}
 	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order);
 
 	const srcStyles = [];
 	for (const cssExt of cssExtensions) {
-		const name = cssExt.name,
-			glob = globs.src + (name == 'css' ? stylesCssFile : getGlob(name));
+		const glob = globs.src + getGlob(cssExt.name);
 		srcStyles.push(glob);
 		cssExt.glob = glob;
 	}
@@ -478,10 +480,10 @@ function getStylesTask(ext) {
 		if (cssExt) {
 			const stylesFile = stylesFilename + '.' + ext,
 				srcStylesFile = globs.src + stylesDir + stylesFile,
-				process = cssExt.process,
+				isPreprocessor = cssExt.isPreprocessor,
 				extraCode = cssExt.getExtraCode(),
 				sep = nl + nl,
-				content = (extraCode ? extraCode + sep : '') + (process ? '// bower:' + ext + nl + '// endbower' : '');
+				content = (extraCode ? extraCode + sep : '') + (isPreprocessor ? '// bower:' + ext + nl + '// endbower' : '');
 			let stream;
 			if (!fileExists(srcStylesFile))
 				stream = $.addFiles([{
@@ -491,11 +493,11 @@ function getStylesTask(ext) {
 			else
 				stream = gulp.src(srcStylesFile)
 					.pipe(injStr.prepend(content ? content + sep : ''));
-			if (process)
-				stream = stream
-					.pipe($.wiredep())
-					.pipe(process()).on('error', notifyError)
-					.pipe($.rename({ suffix: '.' + ext }));
+			if (isPreprocessor)
+				stream = stream.pipe($.wiredep());
+			stream = stream.pipe(cssExt.process()).on('error', notifyError);
+			if (isPreprocessor)
+				stream = stream.pipe($.rename({ suffix: '.' + ext }));
 			return stream
 				.pipe(gulp.dest(globs.tmp + stylesDir))
 				.pipe(browserSync.stream());
