@@ -92,7 +92,7 @@ Defining with:
 | <!-- 〃 --> | `order` | | Number | Index of order to include content in stylesheet. | `0` |
 | <!-- 〃 --> | `less`[^4] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
 | <!-- 〃 --> | `scss`[^4] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
-| <!-- 〃 --> | <!-- 〃 --> | `variables` | Boolean | File of variables (`_variables.scss`) used? | `true` |
+| <!-- 〃 --> | <!-- 〃 --> | `variables` | String | Filename of variables file. | `_variables` |
 | <!-- 〃 --> | `fonts` | `folder` | String | Location (folder path) of font files from Bower. | `'fonts/'` |
 | <!-- 〃 --> | <!-- 〃 --> | `extensions` | String or array of strings | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
 | `js` | `ng`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |

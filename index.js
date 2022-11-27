@@ -7,7 +7,7 @@ const defSettings = {
 		less: { order: 1 },
 		scss: {
 			order: 2,
-			variables: true
+			variables: '_variables'
 		},
 		fonts: {
 			folder: 'fonts/',
@@ -102,10 +102,10 @@ function setVariables(cb) {
 		{
 			name: 'scss',
 			process: gulpSass,
-			getExtraCode: getSetting('variables') ? () => {
-				const file = globs.src + stylesDir + '_variables.scss';
+			getExtraCode: () => {
+				const file = globs.src + stylesDir + getSetting('variables') + '.scss';
 				return fileExists(file) ? `@import "${file}";` : '';
-			} : undefined,
+			},
 			isPreprocessor: true
 		}
 	]) {
