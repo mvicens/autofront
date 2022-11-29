@@ -87,18 +87,17 @@ Defining with:
 | Property | Subprop. | | Type | Details | Default |
 | --- | --- | --- | --- | --- | --- |
 | `html` | `pug` | | Boolean | [Pug](https://pugjs.org) activated? | `false` |
-| `css` | `folder` | | String | Directory that contains CSS files.[^3] Only one level allowed. | `'styles/'` |
+| `css` | `folder` | | String | Directory that contains CSS files. | `'styles/'` |
 | <!-- 〃 --> | `filename` | | String | Filename of root files. | `'index'` |
 | <!-- 〃 --> | `order` | | Number | Index of order to include content in stylesheet. | `0` |
-| <!-- 〃 --> | `less`[^4] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
-| <!-- 〃 --> | `scss`[^4] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
+| <!-- 〃 --> | `less`[^3] | `order` | Number | Idem for [Less](https://lesscss.org). | `1` |
+| <!-- 〃 --> | `scss`[^3] | `order` | Number | Idem for [SCSS (Sass)](https://sass-lang.com/documentation/syntax#scss). | `2` |
 | <!-- 〃 --> | <!-- 〃 --> | `variables` | String | Filename of variables file. | `_variables` |
 | <!-- 〃 --> | `fonts` | `folder` | String | Location (folder path) of font files from Bower. | `'fonts/'` |
 | <!-- 〃 --> | <!-- 〃 --> | `extensions` | String or array of strings | File extensions to catch. | `['eot', 'otf', 'svg', 'ttf', 'woff', 'woff2']` |
-| `js` | `ng`[^4] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
+| `js` | `ng`[^3] | `module` | String | Name of [AngularJS](https://angularjs.org) main module. | `'app'` |
 | <!-- 〃 --> | <!-- 〃 --> | `html5Mode` | Boolean | [HTML5 mode](https://docs.angularjs.org/guide/$location#html5-mode) enabled? | `false` |
 | <!-- 〃 --> | <!-- 〃 --> | `template` | Boolean | Templates loaded by [`$templateCache`](https://docs.angularjs.org/api/ng/service/$templateCache)? | `true` |
 | <!-- 〃 --> | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
 
-[^3]: URLs from the current directory must to start with `./`.
-[^4]: It can be disabled assigning a falsy value.
+[^3]: It can be disabled assigning a falsy value.

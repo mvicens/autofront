@@ -309,7 +309,7 @@ function templates() {
 
 function indexDist() {
 	const replaces = Object.entries({
-		[cssComment]: `<!-- build:css ${cssFile} -->`,
+		[cssComment]: `<!-- build:css ${stylesDir + cssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
@@ -325,19 +325,21 @@ function indexDist() {
 }
 indexDist.displayName = 'index:dist';
 
-function fixUrls() {
-	const replaces = [
-		['./', './' + stylesDir],
-		['../', '']
-	], str = 'url(';
-	let stream = gulp.src(globs.dist + cssFile);
-	for (const [search, str2] of replaces)
-		for (const char of ['', "'", '"'])
-			stream = stream.pipe(replace(str + '\\s*' + char + search, str + char + str2));
-	return stream
+function rebaseCss() {
+	return gulp.src(globs.dist + stylesDir + cssFile)
+		.pipe($.rebaseCssUrls(globs.dist))
 		.pipe(gulp.dest(globs.dist));
 }
-fixUrls.displayName = 'fix-urls';
+rebaseCss.displayName = 'rebase-css';
+
+function rebaseHtml() {
+	return gulp.src(globs.distIndexFile)
+		.pipe(injStr.replace(` href="${stylesDir + cssFile}"`, ` href="${cssFile}"`))
+		.pipe(gulp.dest(globs.dist));
+}
+rebaseHtml.displayName = 'rebase-html';
+
+const rebase = gulp.parallel(rebaseCss, rebaseHtml);
 
 function cleanFiles() {
 	return gulp.src([
@@ -381,7 +383,7 @@ finishBuild.displayName = 'finish-build';
 gulp.task('build', gulp.series(
 	setVariables,
 	gulp.parallel(buildTmp, removeFolderDist),
-	copy, templates, indexDist, fixUrls, clean, minify, finishBuild
+	copy, templates, indexDist, rebase, clean, minify, finishBuild
 ));
 
 function hideFolderDist(cb) {
