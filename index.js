@@ -87,7 +87,7 @@ setDefaultEnv.displayName = 'set-default-env';
 function setVariables(cb) {
 	stylesDir = getSetting('cssFolder');
 	stylesFilename = getSetting('filename');
-	stylesCssFile = stylesDir + stylesFilename + '.css';
+	stylesCssFile = stylesDir + cssFile;
 
 	for (const cssExt of [
 		{
@@ -164,7 +164,7 @@ function index() {
 			'<!-- endbuild -->'
 		];
 	for (const { name } of cssExtensions)
-		strs.push('<link rel="stylesheet" href="' + (name == 'css' ? stylesCssFile : stylesDir + stylesFilename + '.' + name + '.css') + '">');
+		strs.push('<link rel="stylesheet" href="' + stylesDir + stylesFilename + (name != 'css' ? '.' + name : '') + '.css' + '">');
 	strs.push(
 		endCssComment,
 		jsComment,
@@ -309,7 +309,7 @@ function templates() {
 
 function indexDist() {
 	const replaces = Object.entries({
-		[cssComment]: `<!-- build:css ${stylesDir + cssFile} -->`,
+		[cssComment]: `<!-- build:css ${stylesCssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
@@ -326,7 +326,7 @@ function indexDist() {
 indexDist.displayName = 'index:dist';
 
 function rebaseCss() {
-	return gulp.src(globs.dist + stylesDir + cssFile)
+	return gulp.src(globs.dist + stylesCssFile)
 		.pipe($.rebaseCssUrls(globs.dist))
 		.pipe(gulp.dest(globs.dist));
 }
@@ -334,7 +334,7 @@ rebaseCss.displayName = 'rebase-css';
 
 function rebaseHtml() {
 	return gulp.src(globs.distIndexFile)
-		.pipe(injStr.replace(` href="${stylesDir + cssFile}"`, ` href="${cssFile}"`))
+		.pipe(injStr.replace(` href="${stylesCssFile}"`, ` href="${cssFile}"`))
 		.pipe(gulp.dest(globs.dist));
 }
 rebaseHtml.displayName = 'rebase-html';
