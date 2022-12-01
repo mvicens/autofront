@@ -27,18 +27,15 @@ const settings = this;
 for (const name in defSettings)
 	settings[name] = { ...defSettings[name] };
 
-const args = require('get-gulp-args')(),
-	gulp = require('gulp'),
+const gulp = require('gulp'),
 	$ = require('gulp-load-plugins')(),
-	injStr = $.injectString,
 	notifyError = $.notify.onError(error => error.message),
-	gulpSass = $.sass(require('sass')),
-	mainBowerFiles = require('main-bower-files'),
+	gulpFilter = ext => $.filter(getGlob(ext), { restore: true }),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty'),
-	cssnano = require('cssnano'),
-	hidefile = require('hidefile'),
-	fs = require('fs');
+	gulpHtmlmin = () => $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true }),
+	fs = require('fs'),
+	hidefile = require('hidefile');
 
 let defEnv = 'production',
 	envName,
@@ -100,7 +97,7 @@ function setVariables(cb) {
 		},
 		{
 			name: 'scss',
-			process: gulpSass,
+			process: $.sass(require('sass')),
 			getExtraCode: () => {
 				const file = globs.src + stylesDir + getSetting('variables') + '.scss';
 				return fileExists(file) ? `@import "${file}";` : '';
@@ -127,7 +124,7 @@ function setVariables(cb) {
 setVariables.displayName = 'set-variables';
 
 function getEnv() {
-	envName = args.env || defEnv;
+	envName = require('get-gulp-args')().env || defEnv;
 	envValue = getSetting('envs')[envName];
 	const isMatched = envValue !== undefined;
 	return gulp.src(globs.src, { read: false })
@@ -184,7 +181,7 @@ function index() {
 		stream = stream.pipe($.angularFilesort());
 
 	return gulp.src(globs.srcIndex)
-		.pipe(injStr.before('</head>', tab + strs.join(nl + tab) + nl))
+		.pipe($.injectString.before('</head>', tab + strs.join(nl + tab) + nl))
 		.pipe($.inject(stream, { relative: true, transform: filepath => getScriptTag(filepath) })).on('error', notifyError)
 		.pipe($.wiredep())
 		.pipe($.useref())
@@ -227,7 +224,7 @@ function html5Mode(cb) {
 html5Mode.displayName = 'html5-mode';
 
 function fonts(cb) {
-	const glob = mainBowerFiles(getGlob(getSetting('extensions')));
+	const glob = require('main-bower-files')(getGlob(getSetting('extensions')));
 	if (glob.length)
 		return gulp.src(glob)
 			.pipe(gulp.dest(globs.tmp + getSetting('fontsFolder')));
@@ -238,7 +235,7 @@ function fonts(cb) {
 function others() {
 	let stream = gulp.src(globs.srcOthers);
 	if (getSetting('pug')) {
-		const pugFilter = filter('pug');
+		const pugFilter = gulpFilter('pug');
 		stream = stream.pipe(pugFilter).pipe($.pug()).on('error', notifyError).pipe(pugFilter.restore);
 	}
 	return stream.pipe(gulp.dest(globs.tmp));
@@ -332,9 +329,9 @@ function indexDist() {
 	});
 	let stream = gulp.src(globs.distIndexFile);
 	if (getSetting('template') && fileExists(globs.dist + jsTemplatesFile))
-		stream = stream.pipe(injStr.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
+		stream = stream.pipe($.injectString.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
 	for (const [search, str] of replaces)
-		stream = stream.pipe(injStr.replace(search, str));
+		stream = stream.pipe($.injectString.replace(search, str));
 	return stream
 		.pipe($.useref())
 		.pipe(gulp.dest(globs.dist));
@@ -350,7 +347,7 @@ rebaseCss.displayName = 'rebase-css';
 
 function rebaseHtml() {
 	return gulp.src(globs.distIndexFile)
-		.pipe(injStr.replace(` href="${stylesCssFile}"`, ` href="${cssFile}"`))
+		.pipe($.injectString.replace(` href="${stylesCssFile}"`, ` href="${cssFile}"`))
 		.pipe(gulp.dest(globs.dist));
 }
 rebaseHtml.displayName = 'rebase-html';
@@ -376,7 +373,7 @@ const clean = gulp.series(cleanFiles, cleanFolders);
 
 const minify = gulp.parallel(
 	getMinifyTask('html', stream => stream.pipe(gulpHtmlmin())),
-	getMinifyTask('css', stream => stream.pipe($.postcss([cssnano()]))),
+	getMinifyTask('css', stream => stream.pipe($.postcss([require('cssnano')()]))),
 	getMinifyTask('js', stream => {
 		if (getSetting('ng'))
 			stream = stream.pipe($.ngAnnotate());
@@ -387,7 +384,7 @@ const minify = gulp.parallel(
 );
 
 function finishBuild() {
-	const cssAndJsFilter = filter(['css', 'js']);
+	const cssAndJsFilter = gulpFilter(['css', 'js']);
 	return gulp.src(globs.dist + allFiles)
 		.pipe(cssAndJsFilter).pipe($.rev()).pipe($.revDeleteOriginal()).pipe(cssAndJsFilter.restore)
 		.pipe($.revReplace())
@@ -416,7 +413,7 @@ browserDist.displayName = 'browser:dist';
 
 gulp.task('serve:dist', gulp.series(setDefaultEnv, 'build', hideFolderDist, browserDist));
 
-gulp.task('default', gulp.task('serve'));
+gulp.task('default', gulp.series('serve'));
 
 function getGlob(ext = '*') {
 	const glob = '**/*.';
@@ -489,7 +486,7 @@ function getScriptTag(src) {
 function replace(search, str) {
 	for (const char of ['$', '.', '/', '('])
 		search = search.replaceAll(char, '\\' + char);
-	return injStr.replace(search, str);
+	return $.injectString.replace(search, str);
 }
 
 function getStylesTask(ext) {
@@ -510,7 +507,7 @@ function getStylesTask(ext) {
 				}]);
 			else
 				stream = gulp.src(srcStylesFile)
-					.pipe(injStr.prepend(content ? content + sep : ''));
+					.pipe($.injectString.prepend(content ? content + sep : ''));
 			if (isPreprocessor)
 				stream = stream.pipe($.wiredep());
 			stream = stream.pipe(cssExt.process()).on('error', notifyError);
@@ -527,16 +524,8 @@ function getStylesTask(ext) {
 	return fn;
 }
 
-function filter(ext) {
-	return $.filter(getGlob(ext), { restore: true });
-}
-
 function browserSyncInit(path) {
 	browserSync.init({ server: path });
-}
-
-function gulpHtmlmin() {
-	return $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true });
 }
 
 function getMinifyTask(ext, getProcessedStream, str) {
