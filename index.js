@@ -69,7 +69,6 @@ const globs = {
 globs.hiddenDist = '.' + globs.dist;
 globs.srcIndex = globs.src + indexFile;
 globs.srcJs = globs.src + jsFiles;
-globs.srcIndexAndJs = [globs.srcIndex, globs.srcJs];
 globs.srcOthers = [globs.src + allFiles];
 globs.tmpAllFiles = globs.tmp + allFiles;
 globs.distIndexFile = globs.dist + indexFile;
@@ -121,7 +120,7 @@ function setVariables(cb) {
 		srcStyles.push(glob);
 		cssExt.glob = glob;
 	}
-	globs.srcOthers.push(...[...globs.srcIndexAndJs, ...srcStyles].map(glob => '!' + glob));
+	globs.srcOthers.push(...[globs.srcIndex, globs.srcJs, ...srcStyles].map(glob => '!' + glob));
 
 	cb();
 }
@@ -268,19 +267,36 @@ function reload(cb) {
 }
 
 function watch() {
-	gulp.watch(globs.srcIndexAndJs, indexAndJs);
+	gulp.watch(globs.srcIndex, index);
+	gulp.watch(globs.srcJs)
+		.on('add', indexAndJs)
+		.on('change', gulp.series(js))
+		.on('unlink', gulp.series(index))
+		.on('unlink', path => { delFile(path); });
+
 	for (cssExt of cssExtensions)
 		gulp.watch(cssExt.glob, eval(cssExt.name));
-	gulp.watch(globs.srcOthers, others).on('unlink', path => {
+
+	gulp.watch(globs.srcOthers)
+		.on('add', gulp.series(others))
+		.on('change', gulp.series(others))
+		.on('unlink', path => { delFile(path, replaceExt); });
+
+	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + stylesDir + getGlob('css')], reload).on('unlink', () => { deleteEmpty(globs.tmp); });
+
+	function delFile(path, fn) {
 		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
-		if (getSetting('pug'))
-			path = path.replace('.pug', '.html');
+		if (fn)
+			path = fn(path);
 		gulp.src(path, { read: false })
 			.pipe($.clean());
-	});
-	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + getGlob('css')], reload).on('unlink', () => {
-		deleteEmpty(globs.tmp);
-	});
+	}
+
+	function replaceExt(path) {
+		if (getSetting('pug'))
+			return path.replace('.pug', '.html');
+		return path;
+	}
 }
 
 gulp.task('serve', gulp.series(
