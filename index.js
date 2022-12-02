@@ -55,7 +55,6 @@ const allFiles = getGlob(),
 	jsFile = 'index.js';
 let stylesDir,
 	stylesFilename,
-	stylesCssFile,
 	cssExtensions = [];
 
 const globs = {
@@ -83,7 +82,6 @@ setDefaultEnv.displayName = 'set-default-env';
 function setVariables(cb) {
 	stylesDir = getSetting('cssFolder');
 	stylesFilename = getSetting('filename');
-	stylesCssFile = stylesDir + cssFile;
 
 	for (const cssExt of [
 		{
@@ -322,7 +320,7 @@ function templates() {
 
 function indexDist() {
 	const replaces = Object.entries({
-		[cssComment]: `<!-- build:css ${stylesCssFile} -->`,
+		[cssComment]: `<!-- build:css ${cssFile} -->`,
 		[endCssComment]: '<!-- endbuild -->',
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
@@ -338,21 +336,21 @@ function indexDist() {
 }
 indexDist.displayName = 'index:dist';
 
-function rebaseCss() {
-	return gulp.src(globs.dist + stylesCssFile)
-		.pipe($.rebaseCssUrls(globs.dist))
-		.pipe(gulp.dest(globs.dist));
+function rebase() {
+	const str = 'url(',
+		quotes = ["'", '"'];
+	let stream = gulp.src(globs.dist + cssFile)
+		.pipe(replace(str + '\\s*', str));
+	for (char of ['', ...quotes])
+		for (str2 of ['http://', 'https://', '//', '/', 'data:', '#'])
+			stream = stream.pipe(replace(str + char + str2, str + tab + char + str2));
+	stream = stream
+		.pipe(replace(str, str + stylesDir))
+		.pipe(replace(str + stylesDir + tab, str));
+	for (quote of quotes)
+		stream = stream.pipe(replace(str + stylesDir + quote, str + quote + stylesDir));
+	return stream.pipe(gulp.dest(globs.dist));
 }
-rebaseCss.displayName = 'rebase-css';
-
-function rebaseHtml() {
-	return gulp.src(globs.distIndexFile)
-		.pipe($.injectString.replace(` href="${stylesCssFile}"`, ` href="${cssFile}"`))
-		.pipe(gulp.dest(globs.dist));
-}
-rebaseHtml.displayName = 'rebase-html';
-
-const rebase = gulp.parallel(rebaseCss, rebaseHtml);
 
 function cleanFiles() {
 	return gulp.src([
@@ -370,6 +368,8 @@ function cleanFolders() {
 cleanFolders.displayName = 'clean-folders';
 
 const clean = gulp.series(cleanFiles, cleanFolders);
+
+const rebaseAndClean = gulp.parallel(rebase, clean);
 
 const minify = gulp.parallel(
 	getMinifyTask('html', stream => stream.pipe(gulpHtmlmin())),
@@ -396,7 +396,7 @@ finishBuild.displayName = 'finish-build';
 gulp.task('build', gulp.series(
 	setVariables,
 	gulp.parallel(buildTmp, removeFolderDist),
-	copy, templates, indexDist, rebase, clean, minify, finishBuild
+	copy, templates, indexDist, rebaseAndClean, minify, finishBuild
 ));
 
 function hideFolderDist(cb) {
