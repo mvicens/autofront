@@ -336,6 +336,13 @@ function indexDist() {
 }
 indexDist.displayName = 'index:dist';
 
+function purgeCss() {
+	return gulp.src(globs.dist + cssFile)
+		.pipe($.purgecss({ content: [globs.dist + getGlob('html')] }))
+		.pipe(gulp.dest(globs.dist));
+}
+purgeCss.displayName = 'purge-css';
+
 function rebase() {
 	const str = 'url(',
 		quotes = ["'", '"'];
@@ -396,7 +403,7 @@ finishBuild.displayName = 'finish-build';
 gulp.task('build', gulp.series(
 	setVariables,
 	gulp.parallel(buildTmp, removeFolderDist),
-	copy, templates, indexDist, rebaseAndClean, minify, finishBuild
+	copy, templates, indexDist, purgeCss, rebaseAndClean, minify, finishBuild
 ));
 
 function hideFolderDist(cb) {
