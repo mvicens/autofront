@@ -34,6 +34,7 @@ const gulp = require('gulp'),
 	browserSync = require('browser-sync').create(),
 	deleteEmpty = require('delete-empty'),
 	gulpHtmlmin = () => $.htmlmin({ collapseWhitespace: true, conservativeCollapse: true }),
+	gulpPostcss = name => $.postcss([require(name)()]),
 	fs = require('fs'),
 	hidefile = require('hidefile');
 
@@ -378,9 +379,14 @@ const clean = gulp.series(cleanFiles, cleanFolders);
 
 const rebaseAndClean = gulp.parallel(rebase, clean);
 
+const compatible = gulp.parallel(
+	getCompatibleTask('css', stream => stream.pipe(gulpPostcss('autoprefixer'))),
+	getCompatibleTask('js', stream => stream.pipe($.babel({ presets: ['@babel/preset-env'], compact: false })))
+);
+
 const minify = gulp.parallel(
 	getMinifyTask('html', stream => stream.pipe(gulpHtmlmin())),
-	getMinifyTask('css', stream => stream.pipe($.postcss([require('cssnano')()]))),
+	getMinifyTask('css', stream => stream.pipe(gulpPostcss('cssnano'))),
 	getMinifyTask('js', stream => {
 		if (getSetting('ng'))
 			stream = stream.pipe($.ngAnnotate());
@@ -403,7 +409,7 @@ finishBuild.displayName = 'finish-build';
 gulp.task('build', gulp.series(
 	setVariables,
 	gulp.parallel(buildTmp, removeFolderDist),
-	copy, templates, indexDist, purgeCss, rebaseAndClean, minify, finishBuild
+	copy, templates, indexDist, purgeCss, rebaseAndClean, compatible, minify, finishBuild
 ));
 
 function hideFolderDist(cb) {
@@ -535,9 +541,17 @@ function browserSyncInit(path) {
 	browserSync.init({ server: path });
 }
 
+function getCompatibleTask(ext, getProcessedStream) {
+	return getProcessingTask('compatible', ext, getProcessedStream);
+}
+
 function getMinifyTask(ext, getProcessedStream, str) {
+	return getProcessingTask('minify', ext, getProcessedStream, str);
+}
+
+function getProcessingTask(prefix, ext, getProcessedStream, str) {
 	const fn = () => getProcessedStream(gulp.src(globs.dist + getGlob(ext)))
 		.pipe(gulp.dest(globs.dist));
-	fn.displayName = 'minify-' + (str || ext);
+	fn.displayName = prefix + '-' + (str || ext);
 	return fn;
 }
