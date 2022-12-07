@@ -1,6 +1,6 @@
 {
   "name": "autofront",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Automation of front-end by Gulp and Bower.",
   "main": "index.js",
   "scripts": {
