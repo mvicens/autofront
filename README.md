@@ -49,7 +49,7 @@ The Gulp ones are:
 | Name | Details | Processes |
 | --- | --- | --- |
 | `serve` (default) | Source code runs in a server with live reload. | <ul><li>Bower entry-point files catching.</li><li>Notification and injection of [environment](#environment-variables).</li><li>Compilation (Less, SCSS and Pug)[^1].</li><li>Set up[^2] of HTML5 mode.[^1]</li><li>Insertion of file with app info (`about.json`).</li></ul> |
-| `build` | Production code is built (in folder `dist`). | The above and: <ul><li>Templates caching.[^1]</li><li>Concatenation to one hashed file (CSS and JS).</li><li>Minification (HTML, CSS, JS, images and JSON).</li><li>Console display of files size.</li></ul> |
+| `build` | Production code is built (in folder `dist`). | The above and: <ul><li>Templates caching.[^1]</li><li>Concatenation to one hashed file (CSS and JS).</li><li>CSS purging.</li><li>Transform to compatible CSS (Autoprefixer) and JS (Babel).</li><li>Minification (HTML, CSS, JS, images and JSON).</li><li>Console display of files size.</li></ul> |
 | `serve:dist` | This distributable application is served but without the refreshing. | The same with the folder hidden. |
 
 [^1]: [If it is on](#settings).
