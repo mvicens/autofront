@@ -295,7 +295,7 @@ function watch() {
 	}
 }
 
-gulp.task('serve', gulp.series(
+defineTask('serve', gulp.series(
 	gulp.parallel(setDefaultEnv, setVariables),
 	buildTmp, browser, watch
 ));
@@ -406,11 +406,11 @@ function finishBuild() {
 }
 finishBuild.displayName = 'finish-build';
 
-gulp.task('build', gulp.series(
+defineTask('build', gulp.series(
 	setVariables,
 	gulp.parallel(buildTmp, removeFolderDist),
 	copy, templates, indexDist, purgeCss, rebaseAndClean, compatible, minify, finishBuild
-));
+), 'Build the project.');
 
 function hideFolderDist(cb) {
 	hideDir(globs.dist);
@@ -424,9 +424,9 @@ function browserDist(cb) {
 }
 browserDist.displayName = 'browser:dist';
 
-gulp.task('serve:dist', gulp.series(setDefaultEnv, 'build', hideFolderDist, browserDist));
+defineTask('serve:dist', gulp.series(setDefaultEnv, 'build', hideFolderDist, browserDist), 'Serve the built project.');
 
-gulp.task('default', gulp.series('serve'));
+defineTask('default', gulp.series('serve'));
 
 function getGlob(ext = '*') {
 	const glob = '**/*.';
@@ -539,6 +539,12 @@ function getStylesTask(ext) {
 
 function browserSyncInit(path) {
 	browserSync.init({ server: path });
+}
+
+function defineTask(name, composing, description) {
+	composing.description = description || 'Serve the project.';
+	composing.flags = { '--env': 'Environment name' };
+	gulp.task(name, composing);
 }
 
 function getCompatibleTask(ext, getProcessedStream) {
