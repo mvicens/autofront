@@ -49,8 +49,8 @@ const allFiles = getGlob(),
 	cssComment = '<!-- autofrontcss -->',
 	endCssComment = '<!-- endautofrontcss -->',
 	jsComment = '<!-- autofrontjs -->',
-	html5ModeJsFile = scriptsDir + 'html5-mode.js',
-	jsTemplatesFile = scriptsDir + 'templates.js',
+	html5ModeFile = scriptsDir + 'html5-mode.js',
+	templatesFile = scriptsDir + 'templates.js',
 	endJsComment = '<!-- endautofrontjs -->',
 	cssFile = 'index.css',
 	jsFile = 'index.js';
@@ -64,12 +64,15 @@ const globs = {
 	dist: 'dist/'
 };
 globs.hiddenDist = '.' + globs.dist;
+globs.srcStyles = globs.src;
 globs.srcIndex = globs.src + indexFile;
-globs.srcJs = globs.src + jsFiles;
+globs.srcJss = globs.src + jsFiles;
 globs.srcOthers = [globs.src + allFiles];
-globs.tmpAllFiles = globs.tmp + allFiles;
-globs.distIndexFile = globs.dist + indexFile;
-globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndexFile];
+globs.tmpAll = globs.tmp + allFiles;
+globs.tmpStyles = globs.tmp;
+globs.distIndex = globs.dist + indexFile;
+globs.distTmpls = [globs.dist + getGlob('html'), '!' + globs.distIndex];
+globs.distCss = globs.dist + cssFile;
 
 const nl = '\r\n',
 	tab = '	';
@@ -83,6 +86,8 @@ setDefaultEnv.displayName = 'set-default-env';
 function setVariables(cb) {
 	stylesDir = getSetting('cssFolder');
 	stylesFilename = getSetting('filename');
+	for (const prop of ['srcStyles', 'tmpStyles'])
+		globs[prop] += stylesDir;
 
 	for (const cssExt of [
 		{
@@ -98,7 +103,7 @@ function setVariables(cb) {
 			name: 'scss',
 			process: $.sass(require('sass')),
 			getExtraCode: () => {
-				const file = globs.src + stylesDir + getSetting('variables') + '.scss';
+				const file = globs.srcStyles + getSetting('variables') + '.scss';
 				return fileExists(file) ? `@import "${file}";` : '';
 			},
 			isPreprocessor: true
@@ -110,13 +115,13 @@ function setVariables(cb) {
 	}
 	cssExtensions = cssExtensions.sort((a, b) => a.order - b.order);
 
-	const srcStyles = [];
+	const srcStylesFiles = [];
 	for (const cssExt of cssExtensions) {
 		const glob = globs.src + getGlob(cssExt.name);
-		srcStyles.push(glob);
+		srcStylesFiles.push(glob);
 		cssExt.glob = glob;
 	}
-	globs.srcOthers.push(...[globs.srcIndex, globs.srcJs, ...srcStyles].map(glob => '!' + glob));
+	globs.srcOthers.push(...[globs.srcIndex, globs.srcJss, ...srcStylesFiles].map(glob => '!' + glob));
 
 	cb();
 }
@@ -171,11 +176,11 @@ function index() {
 	);
 	if (getSetting('html5Mode')) {
 		strs.unshift('<base href="/">');
-		strs.push(getScriptTag(html5ModeJsFile));
+		strs.push(getScriptTag(html5ModeFile));
 	}
 	strs.push(endJsComment);
 
-	let stream = gulp.src(globs.srcJs);
+	let stream = gulp.src(globs.srcJss);
 	if (getSetting('ng'))
 		stream = stream.pipe($.angularFilesort());
 
@@ -188,7 +193,7 @@ function index() {
 }
 
 function js() {
-	return gulp.src(globs.srcJs)
+	return gulp.src(globs.srcJss)
 		.pipe(replace('AUTOFRONT_ENV', JSON.stringify(envValue, undefined, tab)))
 		.pipe(gulp.dest(globs.tmp));
 }
@@ -206,7 +211,7 @@ const styles = gulp.parallel(css, less, scss);
 function html5Mode(cb) {
 	if (getSetting('html5Mode'))
 		return $.addFiles([{
-			name: html5ModeJsFile,
+			name: html5ModeFile,
 			content: `(function () {
 	angular.module('${getSetting('module')}')
 		.config(config);
@@ -264,7 +269,7 @@ function reload(cb) {
 
 function watch() {
 	gulp.watch(globs.srcIndex, index);
-	gulp.watch(globs.srcJs)
+	gulp.watch(globs.srcJss)
 		.on('add', indexAndJs)
 		.on('change', gulp.series(js))
 		.on('unlink', gulp.series(index))
@@ -278,7 +283,7 @@ function watch() {
 		.on('change', gulp.series(others))
 		.on('unlink', path => { delFile(path, replaceExt); });
 
-	gulp.watch([globs.tmpAllFiles, '!' + globs.tmp + stylesDir + getGlob('css')], reload).on('unlink', () => { deleteEmpty(globs.tmp); });
+	gulp.watch([globs.tmpAll, '!' + globs.tmpStyles + getGlob('css')], reload).on('unlink', () => { deleteEmpty(globs.tmp); });
 
 	function delFile(path, fn) {
 		path = path.replaceAll('\\', '/').replace(globs.src, globs.tmp);
@@ -306,7 +311,7 @@ function removeFolderDist() {
 removeFolderDist.displayName = 'remove-folder:dist';
 
 function copy() {
-	return gulp.src(globs.tmpAllFiles)
+	return gulp.src(globs.tmpAll)
 		.pipe($.size())
 		.pipe(gulp.dest(globs.dist));
 }
@@ -315,7 +320,7 @@ function templates() {
 	let stream = gulp.src(globs.distTmpls)
 		.pipe(gulpHtmlmin());
 	if (getSetting('template'))
-		stream = stream.pipe($.angularTemplatecache(jsTemplatesFile, { module: getSetting('module'), transformUrl: url => url.slice(1) }));
+		stream = stream.pipe($.angularTemplatecache(templatesFile, { module: getSetting('module'), transformUrl: url => url.slice(1) }));
 	return stream.pipe(gulp.dest(globs.dist));
 }
 
@@ -326,9 +331,9 @@ function indexDist() {
 		[jsComment]: `<!-- build:js ${jsFile} defer -->`,
 		[endJsComment]: '<!-- endbuild -->'
 	});
-	let stream = gulp.src(globs.distIndexFile);
-	if (getSetting('template') && fileExists(globs.dist + jsTemplatesFile))
-		stream = stream.pipe($.injectString.before(endJsComment, getScriptTag(jsTemplatesFile) + nl + tab));
+	let stream = gulp.src(globs.distIndex);
+	if (getSetting('template') && fileExists(globs.dist + templatesFile))
+		stream = stream.pipe($.injectString.before(endJsComment, getScriptTag(templatesFile) + nl + tab));
 	for (const [search, str] of replaces)
 		stream = stream.pipe($.injectString.replace(search, str));
 	return stream
@@ -338,7 +343,7 @@ function indexDist() {
 indexDist.displayName = 'index:dist';
 
 function purgeCss() {
-	return gulp.src(globs.dist + cssFile)
+	return gulp.src(globs.distCss)
 		.pipe($.purgecss({ content: [globs.dist + getGlob('html')] }))
 		.pipe(gulp.dest(globs.dist));
 }
@@ -347,7 +352,7 @@ purgeCss.displayName = 'purge-css';
 function rebase() {
 	const str = 'url(',
 		quotes = ["'", '"'];
-	let stream = gulp.src(globs.dist + cssFile)
+	let stream = gulp.src(globs.distCss)
 		.pipe(replace(str + '\\s*', str));
 	for (char of ['', ...quotes])
 		for (str2 of ['http://', 'https://', '//', '/', 'data:', '#'])
@@ -363,7 +368,7 @@ function rebase() {
 function cleanFiles() {
 	return gulp.src([
 		...(getSetting('template') ? globs.distTmpls : []),
-		globs.dist + getGlob('css'), '!' + globs.dist + cssFile,
+		globs.dist + getGlob('css'), '!' + globs.distCss,
 		globs.dist + jsFiles, '!' + globs.dist + jsFile
 	], { read: false })
 		.pipe($.clean());
@@ -507,7 +512,7 @@ function getStylesTask(ext) {
 		const cssExt = cssExtensions.find(({ name }) => name == ext);
 		if (cssExt) {
 			const stylesFile = stylesFilename + '.' + ext,
-				srcStylesFile = globs.src + stylesDir + stylesFile,
+				srcStylesFile = globs.srcStyles + stylesFile,
 				isPreprocessor = cssExt.isPreprocessor,
 				extraCode = cssExt.getExtraCode(),
 				sep = nl + nl,
@@ -527,7 +532,7 @@ function getStylesTask(ext) {
 			if (isPreprocessor)
 				stream = stream.pipe($.rename({ suffix: '.' + ext }));
 			return stream
-				.pipe(gulp.dest(globs.tmp + stylesDir))
+				.pipe(gulp.dest(globs.tmpStyles))
 				.pipe(browserSync.stream());
 		}
 
