@@ -1,4 +1,3 @@
-(function () {
-	angular.module('app')
-		.value('items', ['Bread', 'Milk', 'Apple']);
-})();
+angular
+	.module('app')
+	.value('items', ['Bread', 'Milk', 'Apple']);

@@ -104,7 +104,7 @@ function setVariables(cb) {
 			process: $.sass(require('sass')),
 			getExtraCode: () => {
 				const file = globs.srcStyles + getSetting('variables') + '.scss';
-				return fileExists(file) ? `@import "${file}";` : '';
+				return fileExists(file) ? `@import "./${file}";` : '';
 			},
 			isPreprocessor: true
 		}
@@ -213,7 +213,8 @@ function html5Mode(cb) {
 		return $.addFiles([{
 			name: html5ModeFile,
 			content: `(function () {
-	angular.module('${getSetting('module')}')
+	angular
+		.module('${getSetting('module')}')
 		.config(config);
 
 	function config($locationProvider) {

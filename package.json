@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "serve": "gulp",
-    "serve:dist": "gulp serve:dist --env=preproduction",
-    "build": "gulp build"
+    "build": "gulp build",
+    "serve:dist": "gulp serve:dist --env=preproduction"
   },
   "repository": {
     "type": "git",
