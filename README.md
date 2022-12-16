@@ -101,3 +101,26 @@ Defining with:
 | <!-- 〃 --> | `envs` | | Object | Environment variables list, with names as keys and data (whatever can be JSON parsed) as values. | `{}` |
 
 [^3]: It can be disabled assigning a falsy value.
+
+## Pending
+
+Fixes and improvements to do:
+
+- Achieve detection of unnamed files (like `.gitkeep`, `.nomedia`...).
+- Implement new settings, such as:
+  - `js`:
+    - Folder (`scripts/`) where to locate source code from Bower (`.tmp`), to avoid conflicts with own files in `src`.
+    - Indication about when Babel compilation (during serve or build?).
+    - List of CDNs to load.
+  - Exclusion folder(s) (whose any files will be forcely treated as "others").
+- Settings changes (major releases):
+  - All "extra" (not HTML, CSS or JS) languages/libraries defaultly disabled?
+  - No CSS preprocessors configured? To activate one, pass info: extension file, Gulp plugin...
+- Use [Gulp If](https://www.npmjs.com/package/gulp-if), [Gulp Plumber](https://www.npmjs.com/package/gulp-plumber), [Gulp Newer](https://www.npmjs.com/package/gulp-newer), [Gulp Changed](https://www.npmjs.com/package/gulp-changed), [Gulp Count](https://www.npmjs.com/package/gulp-count)...?
+- Support:
+  - Markdown (compilation to HTML).
+  - [React](https://reactjs.org) (JSX), [Vue](https://vuejs.org)...?
+  - [Stylus](https://stylus-lang.com) and other CSS preprocessors?
+- Avoid to build distributable CSS if no content?
+- Create Gulp task to add new folder with files of template, AngularJS controller and styles in directory `app/`?
+- Use [Typrod](https://github.com/mvicens/typrod) as Bower dependency in demo.
