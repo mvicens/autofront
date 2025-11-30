@@ -84,7 +84,7 @@ autofront.property2.subproperty4 = value3;
 
 Defining with:
 
-| Property | Subprop. | | Type | Details | Default |
+| Property | Subprop. | <!-- 〃 --> | Type | Details | Default |
 | --- | --- | --- | --- | --- | --- |
 | `html` | `pug` | | Boolean | [Pug](https://pugjs.org) activated? | `false` |
 | `css` | `folder` | | String | Directory that contains CSS files. | `'styles/'` |
