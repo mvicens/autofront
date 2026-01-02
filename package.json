@@ -1,7 +1,7 @@
 {
   "name": "autofront",
-  "version": "3.1.3",
-  "description": "Automation of front-end by Gulp and Bower.",
+  "version": "3.1.4",
+  "description": "Automation of front-end by Gulp and Bower",
   "main": "index.js",
   "scripts": {
     "serve": "gulp",
@@ -13,13 +13,13 @@
     "url": "git+https://github.com/mvicens/autofront.git"
   },
   "keywords": [
-    "html",
-    "pug",
+    "angularjs",
     "css",
-    "less",
-    "scss",
+    "html",
     "javascript",
-    "angularjs"
+    "less",
+    "pug",
+    "scss"
   ],
   "author": "Miquel Alejandro Vicens Dalmau",
   "license": "ISC",
